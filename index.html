@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#4f46e5" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Primary Meta Tags -->
+    <title>CWH Chat | Premium Realtime Messaging</title>
+    <meta name="title" content="CWH Chat | Premium Realtime Messaging" />
+    <meta name="description" content="Experience modern, smooth, and interactive realtime messaging with CWH Chat. A premium SaaS-like chat application built with React, Vite, and Firebase." />
+    <meta name="keywords" content="chat, realtime, messaging, firebase, react, web app, pwa" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://cwhchat.app/" />
+    <meta property="og:title" content="CWH Chat | Premium Realtime Messaging" />
+    <meta property="og:description" content="Experience modern, smooth, and interactive realtime messaging with CWH Chat. A premium SaaS-like chat application built with React, Vite, and Firebase." />
+    <meta property="og:image" content="/vite.svg" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://cwhchat.app/" />
+    <meta property="twitter:title" content="CWH Chat | Premium Realtime Messaging" />
+    <meta property="twitter:description" content="Experience modern, smooth, and interactive realtime messaging with CWH Chat. A premium SaaS-like chat application built with React, Vite, and Firebase." />
+    <meta property="twitter:image" content="/vite.svg" />
+
+    <!-- Structure Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "CWH Chat",
+      "applicationCategory": "CommunicationApplication",
+      "operatingSystem": "Any",
+      "description": "Premium realtime messaging platform."
+    }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          // Register main service worker
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(() => console.log('[SW] Main service worker registered'))
+            .catch(err => console.warn('[SW] service-worker.js failed:', err));
+          // Register Firebase Messaging service worker
+          navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            .then(() => console.log('[SW] Firebase messaging SW registered'))
+            .catch(err => console.warn('[SW] firebase-messaging-sw.js failed:', err));
+        });
+      }
+    </script>
+  </body>
+</html>

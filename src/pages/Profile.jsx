@@ -1,0 +1,164 @@
+import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { FiCamera, FiArrowLeft, FiSave, FiUser, FiMail, FiFileText } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { db, storage } from '../firebase/firebaseConfig';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { updateProfile } from 'firebase/auth';
+import { auth } from '../firebase/firebaseConfig';
+
+const Profile = () => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const avatarInputRef = useRef(null);
+
+  const [displayName, setDisplayName] = useState(currentUser?.displayName || '');
+  const [status, setStatus] = useState('Hey there! I am using CWH Chat.');
+  const [bio, setBio] = useState('');
+  const [avatarPreview, setAvatarPreview] = useState(currentUser?.photoURL || null);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSave = async () => {
+    if (!currentUser) return;
+    setSaving(true);
+    try {
+      let photoURL = currentUser.photoURL;
+
+      if (avatarFile) {
+        const { uploadImage } = await import('../utils/imageUpload');
+        photoURL = await uploadImage(avatarFile);
+      }
+
+      await updateProfile(auth.currentUser, { displayName, photoURL });
+      await updateDoc(doc(db, 'users', currentUser.uid), {
+        name: displayName,
+        avatar: photoURL,
+        status,
+        bio,
+        lastSeen: serverTimestamp(),
+      });
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error('Error updating profile:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-bg-base flex flex-col relative overflow-hidden">
+      {/* Background glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary-600/10 blur-[120px]" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-accent-600/10 blur-[120px]" />
+
+      {/* Header */}
+      <div className="h-16 px-6 flex items-center space-x-4 bg-slate-900/60 backdrop-blur-xl border-b border-white/5 z-10">
+        <button onClick={() => navigate('/')} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+          <FiArrowLeft className="w-5 h-5" />
+        </button>
+        <h1 className="text-white font-semibold text-lg">Edit Profile</h1>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center p-0 sm:p-6 z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full sm:max-w-md glass-card sm:rounded-2xl p-6 sm:p-8 min-h-[calc(100vh-64px)] sm:min-h-0"
+        >
+          {/* Avatar Section */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+              <img
+                src={avatarPreview || `https://ui-avatars.com/api/?name=${displayName}&background=4f46e5&color=fff`}
+                alt="Avatar"
+                className="w-24 h-24 rounded-full object-cover border-4 border-slate-700 group-hover:border-primary-500 transition-colors shadow-xl"
+              />
+              <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <FiCamera className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <input type="file" accept="image/*" ref={avatarInputRef} onChange={handleAvatarChange} className="hidden" />
+            <p className="mt-2 text-xs text-slate-500">Click to change avatar</p>
+          </div>
+
+          {/* Form Fields */}
+          <div className="space-y-4">
+            <div>
+              <label className="flex items-center space-x-2 text-sm font-medium text-slate-300 mb-1.5">
+                <FiUser className="w-4 h-4 text-primary-400" />
+                <span>Display Name</span>
+              </label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              />
+            </div>
+            <div>
+              <label className="flex items-center space-x-2 text-sm font-medium text-slate-300 mb-1.5">
+                <FiMail className="w-4 h-4 text-primary-400" />
+                <span>Email</span>
+              </label>
+              <input
+                type="email"
+                value={currentUser?.email || ''}
+                disabled
+                className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-slate-500 cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label className="flex items-center space-x-2 text-sm font-medium text-slate-300 mb-1.5">
+                <FiFileText className="w-4 h-4 text-primary-400" />
+                <span>Bio</span>
+              </label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Write something about yourself..."
+                rows={3}
+                className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">Status</label>
+              <input
+                type="text"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                maxLength={80}
+                className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              />
+              <p className="text-right text-xs text-slate-600 mt-1">{status.length}/80</p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full mt-6 py-3 px-4 bg-gradient-primary hover:opacity-90 text-white rounded-xl font-medium transition-all flex items-center justify-center space-x-2 shadow-lg shadow-primary-500/20 disabled:opacity-60"
+          >
+            <FiSave className="w-5 h-5" />
+            <span>{saving ? 'Saving...' : saved ? 'Saved ✓' : 'Save Profile'}</span>
+          </button>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+export default Profile;

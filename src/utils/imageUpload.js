@@ -1,0 +1,31 @@
+const IMGBB_API_KEY = 'a6e954800f8888738db4769566939c26';
+
+/**
+ * Uploads an image to ImgBB and returns the direct display URL.
+ * @param {File} file - The image file to upload
+ * @returns {Promise<string>} - The URL of the uploaded image
+ */
+export const uploadImage = async (file) => {
+  if (!file) return null;
+  
+  const formData = new FormData();
+  formData.append('image', file);
+
+  try {
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      return result.data.url;
+    } else {
+      throw new Error(result.error?.message || 'Upload failed');
+    }
+  } catch (error) {
+    console.error('ImgBB Upload Error:', error);
+    throw error;
+  }
+};
