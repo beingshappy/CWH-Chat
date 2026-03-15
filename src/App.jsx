@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -7,12 +7,34 @@ import BackgroundEffects from './components/BackgroundEffects';
 import CallOverlay from './components/CallOverlay';
 import ModernPopup from './components/ModernPopup';
 
+import { AnimatePresence } from 'framer-motion';
+
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Settings = lazy(() => import('./pages/Settings'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+
+// Define animating layout wrapper
+const AnimatedRoutes = () => {
+  const { currentUser } = useAuth();
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/login" element={!currentUser ? <PageTransition><Login /></PageTransition> : <Navigate to="/" replace />} />
+        <Route path="/register" element={!currentUser ? <PageTransition><Register /></PageTransition> : <Navigate to="/" replace />} />
+        <Route path="/forgot-password" element={!currentUser ? <PageTransition><ForgotPassword /></PageTransition> : <Navigate to="/" replace />} />
+        <Route path="/" element={currentUser ? <PageTransition><Dashboard /></PageTransition> : <Navigate to="/login" replace />} />
+        <Route path="/profile" element={currentUser ? <PageTransition><Profile /></PageTransition> : <Navigate to="/login" replace />} />
+        <Route path="/settings" element={currentUser ? <PageTransition><Settings /></PageTransition> : <Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
 
 const LoadingSpinner = () => (
   <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 bg-bg-base relative overflow-hidden">
@@ -35,15 +57,7 @@ function App() {
           <CallOverlay />
           <ModernPopup />
           <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              <Route path="/login" element={!currentUser ? <PageTransition><Login /></PageTransition> : <Navigate to="/" />} />
-              <Route path="/register" element={!currentUser ? <PageTransition><Register /></PageTransition> : <Navigate to="/" />} />
-              <Route path="/forgot-password" element={!currentUser ? <PageTransition><ForgotPassword /></PageTransition> : <Navigate to="/" />} />
-              <Route path="/" element={currentUser ? <PageTransition><Dashboard /></PageTransition> : <Navigate to="/login" />} />
-              <Route path="/profile" element={currentUser ? <PageTransition><Profile /></PageTransition> : <Navigate to="/login" />} />
-              <Route path="/settings" element={currentUser ? <PageTransition><Settings /></PageTransition> : <Navigate to="/login" />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+            <AnimatedRoutes />
           </Suspense>
         </div>
       </Router>

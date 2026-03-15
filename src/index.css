@@ -53,15 +53,28 @@
 /* Custom Utilities for Glassmorphism 2.0 */
 @layer utilities {
   .glass {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl;
+    @apply bg-bg-surface/90 border border-white/10 shadow-2xl;
   }
   
   .glass-dark {
-    @apply bg-black/40 backdrop-blur-2xl border border-primary-500/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
+    @apply bg-black/90 border border-primary-500/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
   }
   
   .glass-card {
-    @apply bg-bg-surface/60 backdrop-blur-xl border border-primary-500/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
+    @apply bg-bg-surface border border-primary-500/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
+  }
+
+  /* Restore glassmorphism on desktop only (md+) – mobile stays fast */
+  @media (min-width: 768px) {
+    .glass {
+      @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl;
+    }
+    .glass-dark {
+      @apply bg-black/40 backdrop-blur-2xl border border-primary-500/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
+    }
+    .glass-card {
+      @apply bg-bg-surface/60 backdrop-blur-xl border border-primary-500/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
+    }
   }
 
   .text-gradient {
@@ -197,11 +210,16 @@
     linear-gradient(165deg, rgba(0, 4, 10, 0.98) 0%, rgba(1, 12, 36, 0.96) 100%),
     url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.12'/%3E%3C/svg%3E");
   background-blend-mode: screen, screen, normal, overlay;
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
   position: relative;
   overflow: hidden;
   border-right: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+@media (min-width: 768px) {
+  .bg-sidebar-premium {
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+  }
 }
 
 .bg-sidebar-premium::before {

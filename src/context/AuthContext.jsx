@@ -107,6 +107,20 @@ export const AuthProvider = ({ children }) => {
     // Heartbeat logic holder
     let heartbeatInterval = null;
 
+    // Visibility Sync handler defined in useEffect scope for cleanup access
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && auth.currentUser) {
+        try {
+          await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+            lastSeen: serverTimestamp(),
+            online: true
+          });
+        } catch (e) {
+          console.warn('[VisibilityHeartbeat] Failed:', e);
+        }
+      }
+    };
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       setLoading(false);
@@ -115,17 +129,21 @@ export const AuthProvider = ({ children }) => {
       if (heartbeatInterval) clearInterval(heartbeatInterval);
 
       if (user) {
-        // Start Heartbeat
-        heartbeatInterval = setInterval(async () => {
+        // Heartbeat function to update lastSeen instantly
+        const sendHeartbeat = async () => {
+          if (!auth.currentUser) return;
           try {
-            await updateDoc(doc(db, 'users', user.uid), {
+            await updateDoc(doc(db, 'users', auth.currentUser.uid), {
               lastSeen: serverTimestamp(),
               online: true
             });
           } catch (e) {
             console.warn('[Heartbeat] Failed:', e);
           }
-        }, 30000); // 30 seconds
+        };
+
+        // Start Heartbeat - High Frequency (10s)
+        heartbeatInterval = setInterval(sendHeartbeat, 10000); 
 
         // Update online status and sync profile info
         try {
@@ -165,6 +183,9 @@ export const AuthProvider = ({ children }) => {
       }
     });
 
+    // Add visibility listener once
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     // Mark offline on unload (Best effort)
     const handleUnload = () => {
       if (auth.currentUser) {
@@ -180,6 +201,7 @@ export const AuthProvider = ({ children }) => {
       unsubscribe();
       if (heartbeatInterval) clearInterval(heartbeatInterval);
       window.removeEventListener('beforeunload', handleUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 

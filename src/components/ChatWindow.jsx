@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { FiPhone, FiVideo, FiInfo, FiChevronLeft, FiSearch, FiMoreVertical } from 'react-icons/fi';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
@@ -240,7 +240,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
   const formatMessageTime = (timestamp) => {
     if (!timestamp) return '';
     const date = timestamp.toDate();
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   const handleTyping = (isTyping) => {
@@ -275,8 +275,38 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
           }}
         />
       )}
+      {/* Mobile More Menu - MOVED TO TOP LEVEL TO PREVENT CLIPPING */}
+      <AnimatePresence>
+        {showMoreMenu && (
+          <>
+            <div className="fixed inset-0 z-[990] bg-black/40 backdrop-blur-sm" onClick={() => setShowMoreMenu(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="fixed top-20 right-4 w-56 bg-[#0a0c10]/95 backdrop-blur-3xl border border-white/5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] z-[1000] overflow-hidden sm:hidden"
+            >
+              <button 
+                onClick={() => { setIsSearchOpen(true); setShowMoreMenu(false); }}
+                className="w-full flex items-center space-x-3 px-5 py-4 text-sm text-text-main hover:bg-white/5 transition-colors"
+              >
+                <FiSearch className="w-5 h-5 text-primary-400" />
+                <span className="font-medium">Search Messages</span>
+              </button>
+              <button 
+                onClick={() => { toggleInfo(); setShowMoreMenu(false); }}
+                className="w-full flex items-center space-x-3 px-5 py-4 text-sm text-text-main hover:bg-white/5 transition-colors border-t border-white/5"
+              >
+                <FiInfo className="w-5 h-5 text-primary-400" />
+                <span className="font-medium">View Info</span>
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Chat Header */}
-      <div className="relative z-30">
+      <div className="relative z-[60]">
         <div className="h-16 px-4 flex items-center justify-between bg-sidebar-premium border-b border-glass-border">
           <div className="flex items-center space-x-3 min-w-0">
             <button
@@ -292,7 +322,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
               </div>
               <div className="min-w-0">
                 <h2 className="text-sm text-text-main font-semibold truncate leading-none">{activeChat.name}</h2>
-                <p className="text-[10px] text-primary-500/70 font-medium mt-1">
+                <p className="text-[10px] text-primary-500/70 font-medium mt-1 whitespace-nowrap truncate max-w-[150px] sm:max-w-none">
                   {isBlocked ? 'Status Unavailable' : (isTyping ? 'typing...' : (isRecipientOnline ? 'Online' : formatLastSeen(otherParticipant?.lastSeen)))}
                 </p>
               </div>
@@ -336,7 +366,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
               <FiInfo className="w-5 h-5 sm:w-[21px] sm:h-[21px]" />
             </button>
 
-            {/* Mobile More Menu */}
+            {/* Mobile More Menu Trigger Only */}
             <div className="sm:hidden relative">
               <button 
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
@@ -344,35 +374,6 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
               >
                 <FiMoreVertical className="w-5 h-5" />
               </button>
-
-              <AnimatePresence>
-                {showMoreMenu && (
-                  <>
-                    <div className="fixed inset-0 z-[40]" onClick={() => setShowMoreMenu(false)} />
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 top-full mt-2 w-48 bg-bg-surface/95 backdrop-blur-2xl border border-glass-border rounded-2xl shadow-2xl z-[50] overflow-hidden"
-                    >
-                      <button 
-                        onClick={() => { setIsSearchOpen(true); setShowMoreMenu(false); }}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-text-main hover:bg-white/5 transition-colors"
-                      >
-                        <FiSearch className="w-4 h-4 text-text-muted" />
-                        <span>Search Messages</span>
-                      </button>
-                      <button 
-                        onClick={() => { toggleInfo(); setShowMoreMenu(false); }}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-text-main hover:bg-white/5 transition-colors border-t border-glass-border/50"
-                      >
-                        <FiInfo className="w-4 h-4 text-text-muted" />
-                        <span>View Info</span>
-                      </button>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -453,7 +454,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
                         animate={{ opacity: 1 }}
                         className="flex justify-center my-4"
                       >
-                        <span className="text-[11px] font-medium text-text-muted bg-bg-surface/60 border border-glass-border px-3 py-1 rounded-full backdrop-blur-sm shadow-sm">
+                        <span className="text-[11px] font-medium text-text-muted bg-bg-surface/60 border border-glass-border px-3 py-1 rounded-full backdrop-blur-sm shadow-sm whitespace-nowrap">
                           {formatDateLabel(msg.timestamp)}
                         </span>
                       </motion.div>

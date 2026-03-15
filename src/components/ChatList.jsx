@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import ChatItem from './ChatItem';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
@@ -24,14 +24,14 @@ const ChatList = ({ activeTab, searchQuery, filteredUsers, filteredChats = [] })
     };
   };
 
-  const handleUserClick = async (user) => {
+  const handleUserClick = useCallback(async (user) => {
     try {
       setActiveStatus(null);
       await startDirectMessage(user);
     } catch (error) {
       console.error('Error starting chat:', error);
     }
-  };
+  }, [setActiveStatus, startDirectMessage]);
 
   const sortedChats = [...(searchQuery ? filteredChats : chats)].sort((a, b) => {
     const isAPinned = a.pinnedBy?.includes(currentUser?.uid);
@@ -77,6 +77,7 @@ const ChatList = ({ activeTab, searchQuery, filteredUsers, filteredChats = [] })
           filteredUsers.map((user) => (
             <ChatItem
               key={user.id}
+              isGlobalDirectory={true}
               chat={{
                 id: user.id,
                 name: user.name,

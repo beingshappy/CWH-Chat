@@ -11,7 +11,7 @@ const CallList = () => {
   const formatCallTime = (timestamp) => {
     if (!timestamp) return '';
     const date = timestamp.toDate();
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' });
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric', hour12: true });
   };
 
   const handleDeleteCall = (e, callId) => {
@@ -90,11 +90,13 @@ const CallList = () => {
                 
                 <div className="min-w-0">
                   <h4 className="text-sm font-medium text-text-main truncate">{otherName}</h4>
-                  <div className="flex items-center space-x-2 text-[11px] text-text-muted">
-                    {call.type === 'video' ? <FiVideo className="w-3 h-3" /> : <FiPhone className="w-3 h-3" />}
-                    <span>{call.type === 'video' ? 'Video' : 'Audio'}</span>
-                    <span>•</span>
-                    <span>{formatCallTime(call.endedAt || call.createdAt)}</span>
+                  <div className="flex items-center space-x-2 text-[11px] text-text-muted whitespace-nowrap overflow-hidden">
+                    <div className="flex items-center space-x-1 flex-shrink-0">
+                      {call.type === 'video' ? <FiVideo className="w-3 h-3" /> : <FiPhone className="w-3 h-3" />}
+                      <span>{call.type === 'video' ? 'Video' : 'Audio'}</span>
+                    </div>
+                    <span className="flex-shrink-0">•</span>
+                    <span className="truncate">{formatCallTime(call.endedAt || call.createdAt)}</span>
                   </div>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiEye, FiTrash2 } from 'react-icons/fi';
 import { useChat } from '../context/ChatContext';
@@ -7,21 +7,65 @@ import { useAuth } from '../context/AuthContext';
 const StatusViewer = ({ userStatus, onClose, isPane = false }) => {
   const { viewStatus, deleteStatus, showPopup, users } = useChat();
   const { currentUser } = useAuth();
+  
+  // Missing State Initializations
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [showViewerList, setShowViewerList] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   const timerRef = useRef(null);
   const currentStory = userStatus.stories[currentIndex];
   const STORY_DURATION = currentStory?.type === 'video' ? 15000 : 5000;
 
-  const viewerUsers = (currentStory.viewers || [])
-    .filter(uid => uid !== currentUser.uid)
-    .map(uid => users.find(u => u.id === uid))
-    .filter(Boolean);
+  useEffect(() => {
+    if (currentStory?.type === 'text') {
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+    }
+  }, [currentIndex, currentStory?.type]);
 
-  const totalViewers = (currentStory.viewers || []).filter(uid => uid !== currentUser.uid).length;
+  // Robust viewer mapping to handle duplicates and ensure we prioritize timestamps
+  const viewerUsers = useMemo(() => {
+    const viewerMap = {};
+    (currentStory.viewers || []).forEach(v => {
+      const uid = typeof v === 'string' ? v : v.uid;
+      const viewedAt = typeof v === 'string' ? null : v.viewedAt;
+      
+      // Keep the one with a timestamp, or the newest one
+      if (!viewerMap[uid] || (!viewerMap[uid].viewedAt && viewedAt) || (viewedAt && viewerMap[uid].viewedAt < viewedAt)) {
+        viewerMap[uid] = { uid, viewedAt };
+      }
+    });
+
+    return Object.values(viewerMap)
+      .filter(v => v.uid !== currentUser.uid)
+      .map(v => {
+        const u = users.find(user => user.id === v.uid);
+        return u ? { ...u, viewedAt: v.viewedAt } : null;
+      })
+      .filter(Boolean);
+  }, [currentStory.viewers, users, currentUser.uid]);
+
+  const totalViewers = viewerUsers.length;
+
+  const getRelativeViewTime = (timestamp) => {
+    if (!timestamp) return 'Recently';
+    
+    // Handle Firestore Timestamp objects or raw milliseconds
+    let millis = typeof timestamp === 'number' ? timestamp : (timestamp.toMillis ? timestamp.toMillis() : (timestamp.seconds ? timestamp.seconds * 1000 : null));
+    
+    if (!millis) return 'Recently';
+    
+    const diffMins = Math.floor((Date.now() - millis) / 60000);
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHrs = Math.floor(diffMins / 60);
+    if (diffHrs < 24) return `${diffHrs}h ago`;
+    return `${Math.floor(diffHrs / 24)}d ago`;
+  };
 
   const handleDelete = (e) => {
     e.stopPropagation();
@@ -45,13 +89,15 @@ const StatusViewer = ({ userStatus, onClose, isPane = false }) => {
   useEffect(() => {
     if (!currentStory) return;
 
-    if (isPaused || showViewerList) {
+    // Pause timer if paused, showing viewer list, or STILL LOADING media
+    if (isPaused || showViewerList || isLoading) {
       clearInterval(timerRef.current);
       return;
     }
 
     // Mark as viewed when starting a story (don't count my own view)
-    if (userStatus.userId !== currentUser.uid && !currentStory.viewers?.includes(currentUser.uid)) {
+    const hasViewed = currentStory.viewers?.some(v => typeof v === 'string' ? v === currentUser.uid : v.uid === currentUser.uid);
+    if (userStatus.userId !== currentUser.uid && !hasViewed) {
         viewStatus(currentStory.id);
     }
 
@@ -70,7 +116,7 @@ const StatusViewer = ({ userStatus, onClose, isPane = false }) => {
     }, 50);
 
     return () => clearInterval(timerRef.current);
-  }, [currentIndex, isPaused, currentStory?.id, showViewerList]);
+  }, [currentIndex, isPaused, currentStory?.id, showViewerList, isLoading]);
 
   const handleNext = () => {
     if (currentIndex < userStatus.stories.length - 1) {
@@ -151,7 +197,17 @@ const StatusViewer = ({ userStatus, onClose, isPane = false }) => {
       </div>
 
       {/* Story Content */}
-      <div className="w-full h-full flex items-center justify-center pointer-events-none">
+      <div className="w-full h-full flex items-center justify-center pointer-events-none relative transition-all duration-500">
+        {isLoading && currentStory.type !== 'text' && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black">
+              <div className="relative">
+                <div className="w-12 h-12 border-2 border-primary-500/20 rounded-full" />
+                <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-primary-500 rounded-full animate-spin shadow-[0_0_15px_rgba(59,130,246,0.3)]" />
+              </div>
+              <p className="mt-4 text-[10px] font-bold tracking-[0.2em] text-primary-500/40 uppercase">Loading Moment</p>
+          </div>
+        )}
+
         {currentStory.type === 'text' ? (
           <div className={`w-full h-full flex items-center justify-center p-12 text-center text-2xl sm:text-3xl font-bold text-white ${currentStory.backgroundColor || 'bg-bg-surface'}`}>
             {currentStory.content}
@@ -164,10 +220,16 @@ const StatusViewer = ({ userStatus, onClose, isPane = false }) => {
                 className="max-h-full w-auto object-contain" 
                 autoPlay 
                 playsInline
+                onLoadedData={() => setIsLoading(false)}
                 onEnded={handleNext}
               />
             ) : (
-              <img src={currentStory.content} className="max-h-full w-auto object-contain shadow-2xl shadow-primary-500/10" alt="" />
+              <img 
+                src={currentStory.content} 
+                className="max-h-full w-auto object-contain shadow-2xl shadow-primary-500/10" 
+                alt="" 
+                onLoad={() => setIsLoading(false)}
+              />
             )}
             {currentStory.caption && (
                <div className="absolute bottom-0 left-0 right-0 p-8 text-center text-white text-base sm:text-lg bg-gradient-to-t from-black/90 to-transparent">
@@ -220,11 +282,13 @@ const StatusViewer = ({ userStatus, onClose, isPane = false }) => {
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-hide">
                     {viewerUsers.length > 0 ? (
                         viewerUsers.map(user => (
-                            <div key={user.id} className="flex items-center space-x-3 p-3 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group">
+                            <div key={`${user.id}-${user.viewedAt}`} className="flex items-center space-x-3 p-3 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 group">
                                 <img src={user.avatar || user.photoURL} className="w-10 h-10 rounded-full border border-white/10 py-[1px] px-[1px]" alt="" />
                                 <div className="flex-1">
                                     <h4 className="text-sm font-medium text-text-main group-hover:text-primary-400 transition-colors uppercase tracking-tight">{user.name}</h4>
-                                    <p className="text-[10px] text-text-muted opacity-60">Viewed just now</p>
+                                    <p className="text-[10px] text-text-muted opacity-60 flex items-center space-x-1">
+                                      <span>{getRelativeViewTime(user.viewedAt)}</span>
+                                    </p>
                                 </div>
                             </div>
                         ))

@@ -94,7 +94,7 @@ const CallOverlay = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9999] bg-bg-base/90 backdrop-blur-xl flex flex-col items-center justify-center p-4"
+                className="fixed inset-0 z-[9999] bg-black/90 md:bg-bg-base/90 md:backdrop-blur-xl flex flex-col items-center justify-center p-4"
             >
                 {/* 1. Ringing State (Outgoing/Incoming) */}
                 {activeCall.status === 'ringing' && (

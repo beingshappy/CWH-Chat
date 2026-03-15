@@ -12,6 +12,8 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  getDocs,
+  writeBatch,
   limit,
   arrayUnion,
   arrayRemove,
@@ -107,6 +109,9 @@ export const ChatProvider = ({ children }) => {
       });
 
       allChats.forEach(chat => {
+        // Soft Delete Filter: Skip if user has hidden this chat
+        if (chat.hiddenBy?.includes(currentUser.uid)) return;
+
         if (!chat.isGroup) {
           const membersKey = chat.members.sort().join('_');
           if (!seenMembers.has(membersKey)) {
@@ -254,6 +259,18 @@ export const ChatProvider = ({ children }) => {
       });
 
       setStatuses(sortedStatuses);
+
+      // Keep activeStatus in sync as well
+      setActiveStatus(current => {
+        if (!current) return null;
+        // Search all users' statuses to find the updated one
+        for (const userStat of sortedStatuses) {
+           if (userStat.userId === current.userId) {
+              return userStat;
+           }
+        }
+        return current;
+      });
     }, (err) => {
       console.warn('[ChatContext] Status subscription error:', err);
     });
@@ -321,6 +338,33 @@ export const ChatProvider = ({ children }) => {
     return newChatRef.id;
   };
 
+  const clearChatMessages = async (chatId) => {
+    if (!currentUser) return;
+    try {
+      const messagesRef = collection(db, 'chats', chatId, 'messages');
+      const q = query(messagesRef);
+      const snapshot = await getDocs(q);
+      
+      const batch = writeBatch(db);
+      snapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      
+      await batch.commit();
+      
+      // Update last message to reflect cleared state
+      await updateDoc(doc(db, 'chats', chatId), {
+        lastMessage: '',
+        updatedAt: serverTimestamp()
+      });
+
+      console.log(`[ChatContext] Chat history cleared: ${chatId}`);
+    } catch (e) {
+      console.error('[ChatContext] Clear chat failed:', e);
+      throw e;
+    }
+  };
+
   const sendMessage = async (chatId, text, file = null, replyData = null) => {
     if (!text.trim() && !file) return;
 
@@ -381,18 +425,8 @@ export const ChatProvider = ({ children }) => {
       const updates = {
         lastMessage: text || (fileType === 'image' ? '📸 Image' : '📎 File'),
         updatedAt: serverTimestamp(),
+        hiddenBy: [] // Resurrection: Clear hiddenBy when new message arrives
       };
-
-      // In a real app we'd use a server-side increment for each member. 
-      // For this MVP, we'll try to update the unread flags.
-      // We'll fetch the chat members to know who to increment for.
-      if (activeChat?.members) {
-          activeChat.members.forEach(uid => {
-              if (uid !== currentUser.uid) {
-                  updates[`unreadCount.${uid}`] = (activeChat.unreadCount?.[uid] || 0) + 1;
-              }
-          });
-      }
 
       await updateDoc(chatRef, updates);
     } catch (error) {
@@ -558,8 +592,14 @@ export const ChatProvider = ({ children }) => {
   const viewStatus = async (statusId) => {
     if (!currentUser) return;
     try {
+      // Find the status to check if already viewed
+      const currentStatus = statuses.flatMap(s => s.stories).find(story => story.id === statusId);
+      const isAlreadyViewed = currentStatus?.viewers?.some(v => typeof v === 'string' ? v === currentUser.uid : v.uid === currentUser.uid);
+
+      if (isAlreadyViewed) return; // Don't add duplicate views
+
       await updateDoc(doc(db, 'statuses', statusId), {
-        viewers: arrayUnion(currentUser.uid)
+        viewers: arrayUnion({ uid: currentUser.uid, viewedAt: Date.now() })
       });
     } catch (e) {
       console.warn('[ChatContext] View status update failed:', e);
@@ -611,11 +651,30 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  const deleteChat = async (chatId) => {
+  const deleteChat = async (targetId) => {
+    if (!currentUser) return;
     try {
-      if (activeChat?.id === chatId) setActiveChat(null);
-      await deleteDoc(doc(db, 'chats', chatId));
-      console.log(`[ChatContext] Chat deleted: ${chatId}`);
+      // Find the actual chat document ID. 
+      // It might be a direct Chat ID, or a User ID passed from the sidebar.
+      let actualChatId = targetId;
+      const existingChat = chats.find(c => 
+        c.id === targetId || (!c.isGroup && c.members.includes(targetId))
+      );
+
+      if (existingChat) {
+        actualChatId = existingChat.id;
+      } else {
+        // If no chat exists yet, nothing to delete
+        return;
+      }
+
+      if (activeChat?.id === actualChatId) setActiveChat(null);
+      
+      // Soft Delete: Just hide for this user
+      await updateDoc(doc(db, 'chats', actualChatId), {
+        hiddenBy: arrayUnion(currentUser.uid)
+      });
+      console.log(`[ChatContext] Chat hidden for user: ${actualChatId}`);
     } catch (e) {
       console.error('[ChatContext] Delete chat failed:', e);
       showPopup({
@@ -673,7 +732,8 @@ export const ChatProvider = ({ children }) => {
       await addDoc(collection(db, 'chats', targetChatId, 'messages'), forwardData);
       await updateDoc(doc(db, 'chats', targetChatId), {
         lastMessage: message.mediaUrl ? (message.mediaType?.includes('image') ? '📷 Photo' : '📁 File') : message.text,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        hiddenBy: [] // Resurrect on forward
       });
     } catch (e) {
       console.error('[ChatContext] Forward failed:', e);
@@ -737,6 +797,7 @@ export const ChatProvider = ({ children }) => {
     viewStatus,
     deleteStatus,
     deleteChat,
+    clearChatMessages,
     deleteCall,
     clearCallHistory,
     togglePinChat,

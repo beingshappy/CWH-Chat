@@ -531,9 +531,9 @@ const MessageBubble = ({ message, isMe, grouped = false, chatId, onForward }) =>
           )}
 
           {/* Timestamp + Read receipt + Star */}
-          <div className={`text-[10px] mt-1 flex items-center justify-end space-x-1 ${isMe ? 'text-primary-100' : 'text-text-muted'}`}>
+          <div className={`text-[10px] mt-1 flex items-center justify-end space-x-1 ${isMe ? 'text-primary-100' : 'text-text-muted'} whitespace-nowrap`}>
             {isStarred && <FiStar className="w-2.5 h-2.5 text-yellow-400 mr-1" />}
-            <span>{message.time}</span>
+            <span className="flex-shrink-0">{message.time}</span>
             {isMe && (
               <span aria-label={message.read ? 'Read' : 'Sent'} title={message.read ? 'Read' : 'Sent'}>
                 {message.read ? (

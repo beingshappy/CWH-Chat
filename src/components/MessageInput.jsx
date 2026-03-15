@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { FiPaperclip, FiSmile, FiSend, FiImage, FiX, FiMic, FiSquare } from 'react-icons/fi';
 import EmojiPicker from 'emoji-picker-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -159,14 +160,15 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
       </AnimatePresence>
 
       {/* File Preview Area */}
-      <AnimatePresence>
-        {selectedFile && (
-          <motion.div 
-             initial={{ opacity: 0, y: 10 }}
-             animate={{ opacity: 1, y: 0 }}
-             exit={{ opacity: 0, scale: 0.95 }}
-             className="absolute bottom-full left-4 right-4 mb-4 p-3 glass-card rounded-xl flex items-center space-x-3 max-w-full sm:max-w-sm z-50"
-          >
+      {ReactDOM.createPortal(
+        <AnimatePresence>
+          {selectedFile && (
+            <motion.div 
+               initial={{ opacity: 0, y: 10 }}
+               animate={{ opacity: 1, y: 0 }}
+               exit={{ opacity: 0, scale: 0.95 }}
+               className="fixed bottom-[72px] left-4 right-4 md:left-[calc(320px+1rem)] md:right-4 lg:left-[calc(384px+1rem)] md:max-w-sm p-3 bg-[#010c24] border border-primary-500/20 rounded-xl flex items-center space-x-3 z-[9000] shadow-2xl"
+            >
             {previewUrl ? (
               <img src={previewUrl} alt="preview" className="w-16 h-16 object-cover rounded-lg border border-glass-border/30" />
             ) : (
@@ -183,17 +185,20 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
             </button>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+      )}
 
-      <AnimatePresence>
-        {showEmoji && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="absolute bottom-[80px] sm:bottom-20 left-0 right-0 sm:left-4 sm:right-auto z-50 shadow-2xl shadow-black/50 px-2 sm:px-0"
-          >
+      {ReactDOM.createPortal(
+        <AnimatePresence>
+          {showEmoji && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="fixed bottom-[72px] left-0 right-0 md:left-80 lg:left-96 z-[9000] shadow-2xl shadow-black/50 px-2 sm:px-0"
+            >
             <div className="glass-card rounded-2xl overflow-hidden border border-slate-700/50 relative w-full sm:w-[320px]">
               <button 
                 onClick={() => setShowEmoji(false)}
@@ -220,7 +225,9 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+      )}
 
       <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
       <input type="file" accept="image/*" ref={imageInputRef} onChange={handleFileSelect} className="hidden" />

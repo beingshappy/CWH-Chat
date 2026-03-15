@@ -10,7 +10,7 @@ import { isActuallyOnline, formatLastSeen } from '../utils/presence';
 
 const InfoPanel = ({ activeChat, close }) => {
   const { currentUser } = useAuth();
-  const { users, setActiveChat, toggleMuteChat, updateChatWallpaper, toggleBlockUser, currentUserProfile } = useChat();
+  const { users, setActiveChat, toggleMuteChat, updateChatWallpaper, toggleBlockUser, currentUserProfile, deleteChat, clearChatMessages } = useChat();
 
   const isGroup = activeChat?.isGroup;
   const isAdmin = activeChat?.admins?.includes(currentUser?.uid);
@@ -158,7 +158,7 @@ const InfoPanel = ({ activeChat, close }) => {
         <div className="flex flex-col items-center justify-center py-8 border-b border-glass-border px-4 text-center">
           <UserAvatar src={activeChat.avatar} name={activeChat.name} size="xl" online={isActuallyOnline(isGroup ? null : users.find(u => u.id === (activeChat.otherUserId || activeChat.id)))} />
           <h3 className="text-xl font-semibold text-text-main mt-4 mb-1">{activeChat.name}</h3>
-          <p className="text-sm text-text-muted">
+          <p className="text-sm text-text-muted whitespace-nowrap truncate max-w-full px-4">
             {isGroup ? `${activeChat.members.length} members` : isActuallyOnline(users.find(u => u.id === (activeChat.otherUserId || activeChat.id))) ? 'Online' : formatLastSeen(users.find(u => u.id === (activeChat.otherUserId || activeChat.id))?.lastSeen)}
           </p>
           {isGroup && activeChat.description && (
@@ -327,15 +327,46 @@ const InfoPanel = ({ activeChat, close }) => {
                 <span className="text-sm font-medium">Leave Group</span>
             </button>
           ) : (
-            <button 
-               onClick={() => toggleBlockUser(activeChat.otherUserId || activeChat.id)}
-               className={`w-full flex items-center space-x-3 p-3 rounded-xl transition-colors ${currentUserProfile?.blockedUsers?.includes(activeChat.otherUserId || activeChat.id) ? 'text-green-400 hover:bg-green-500/10' : 'text-red-400 hover:bg-red-500/10'}`}
-            >
-               <FiTrash2 className="w-5 h-5" />
-               <span className="text-sm font-medium">
-                 {currentUserProfile?.blockedUsers?.includes(activeChat.otherUserId || activeChat.id) ? 'Unblock Contact' : 'Block Contact'}
-               </span>
-            </button>
+            <div className="space-y-2">
+              <button 
+                onClick={async () => {
+                  if (window.confirm('Clear all messages in this chat? This cannot be undone.')) {
+                    await clearChatMessages(activeChat.id);
+                  }
+                }}
+                className="w-full flex items-center space-x-3 p-3 text-orange-400 hover:bg-orange-500/10 rounded-xl transition-colors"
+                title="Wipe conversation history"
+              >
+                 <FiTrash2 className="w-5 h-5" />
+                 <span className="text-sm font-medium">Clear Chat History</span>
+              </button>
+
+              <button 
+                onClick={async () => {
+                  if (window.confirm('Delete this chat from your list? It will reappear if you receive a new message.')) {
+                    await deleteChat(activeChat.id);
+                    close();
+                  }
+                }}
+                className="w-full flex items-center space-x-3 p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors font-semibold"
+                title="Hide this conversation"
+              >
+                 <FiX className="w-5 h-5" />
+                 <span className="text-sm font-medium">Delete Chat</span>
+              </button>
+
+              <div className="pt-2 border-t border-glass-border/30 mt-2">
+                <button 
+                  onClick={() => toggleBlockUser(activeChat.otherUserId || activeChat.id)}
+                  className={`w-full flex items-center space-x-3 p-3 rounded-xl transition-colors ${currentUserProfile?.blockedUsers?.includes(activeChat.otherUserId || activeChat.id) ? 'text-green-400 hover:bg-green-500/10' : 'text-red-400/60 hover:bg-red-500/10'}`}
+                >
+                  <FiUserMinus className="w-5 h-5" />
+                  <span className="text-sm font-medium">
+                    {currentUserProfile?.blockedUsers?.includes(activeChat.otherUserId || activeChat.id) ? 'Unblock Contact' : 'Block Contact'}
+                  </span>
+                </button>
+              </div>
+            </div>
           )}
         </div>
 

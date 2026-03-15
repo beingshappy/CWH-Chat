@@ -13,10 +13,10 @@ export const isActuallyOnline = (user) => {
       : new Date(user.lastSeen);
       
     const now = new Date();
-    const diffInMinutes = (now - lastSeenDate) / (1000 * 60);
+    const diffInSeconds = (now - lastSeenDate) / 1000;
     
-    // Consider offline if the "pulse" hasn't updated in 2 minutes
-    return diffInMinutes < 2;
+    // Consider offline if the "pulse" hasn't updated in 25 seconds (High Frequency)
+    return diffInSeconds < 25;
   } catch (e) {
     console.warn('[PresenceCheck] Failed to calculate status:', e);
     return user.online; // Fallback to raw value
@@ -44,5 +44,26 @@ export const formatLastSeen = (lastSeen) => {
     return `Last seen on ${date.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
   } catch (e) {
     return 'Offline';
+  }
+};
+
+/**
+ * Formats a status upload timestamp for the status list.
+ */
+export const formatStatusTime = (timestamp) => {
+  if (!timestamp) return 'Just now';
+  
+  try {
+    const date = typeof timestamp.toDate === 'function' ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  } catch (e) {
+    return 'Just now';
   }
 };

@@ -126,7 +126,7 @@ const StatusCreator = ({ onClose }) => {
 
         {/* Floating color picker if text */}
         {type === 'text' && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 p-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 p-2 bg-black/70 rounded-full border border-white/10">
                 {colors.map(color => (
                     <button 
                         key={color}

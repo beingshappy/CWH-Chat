@@ -54,7 +54,7 @@ const Sidebar = () => {
 
       <div className="w-full h-full flex flex-col bg-sidebar-premium z-20 relative transition-all duration-300 min-h-0">
         {/* Header */}
-        <div className="h-16 px-4 flex items-center justify-between bg-bg-surface/60 backdrop-blur-2xl border-b border-glass-border flex-shrink-0">
+        <div className="h-16 px-4 flex items-center justify-between bg-bg-surface md:bg-bg-surface/60 md:backdrop-blur-2xl border-b border-glass-border flex-shrink-0">
           <div
             className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group min-w-0"
             onClick={() => navigate('/profile')}

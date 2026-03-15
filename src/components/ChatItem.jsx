@@ -11,13 +11,13 @@ const formatChatTime = (timestamp) => {
   const now = new Date();
   const diffDays = Math.floor((now - date) / 86400000);
 
-  if (diffDays === 0) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (diffDays === 0) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return date.toLocaleDateString([], { weekday: 'short' });
   return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' });
 };
 
-const ChatItem = ({ chat, active, onClick }) => {
+const ChatItemMemo = ({ chat, active, onClick, isGlobalDirectory = false }) => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const longPressTimer = useRef(null);
   const { togglePinChat, toggleMuteChat, deleteChat, showPopup } = useChat();
@@ -107,13 +107,15 @@ const ChatItem = ({ chat, active, onClick }) => {
                   <FiBellOff className={`w-6 h-6 ${isMuted ? 'text-orange-400' : 'text-text-muted'}`} />
                   <span className="text-[10px] font-medium text-text-muted">{isMuted ? 'Unmute' : 'Mute'}</span>
                 </button>
-                <button 
-                  onClick={(e) => { handleDelete(e); setShowMobileMenu(false); }}
-                  className="flex flex-col items-center space-y-2 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 active:scale-95 transition-all"
-                >
-                  <FiTrash2 className="w-6 h-6 text-red-400" />
-                  <span className="text-[10px] font-medium text-red-400">Delete</span>
-                </button>
+                {!isGlobalDirectory && (
+                  <button 
+                    onClick={(e) => { handleDelete(e); setShowMobileMenu(false); }}
+                    className="flex flex-col items-center space-y-2 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 active:scale-95 transition-all"
+                  >
+                    <FiTrash2 className="w-6 h-6 text-red-400" />
+                    <span className="text-[10px] font-medium text-red-400">Delete</span>
+                  </button>
+                )}
               </div>
 
               <button onClick={() => setShowMobileMenu(false)} className="w-full py-4 text-text-muted font-medium hover:text-text-main transition-colors border-t border-glass-border/30 mt-2">Close</button>
@@ -164,8 +166,8 @@ const ChatItem = ({ chat, active, onClick }) => {
               </span>
             )}
             
-            {/* Context Actions visible on hover */}
-            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100 translate-x-1 group-hover:translate-x-0">
+            {/* Context Actions visible on hover (Desktop Only) */}
+            <div className="hidden md:flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100 translate-x-1 group-hover:translate-x-0">
               <button 
                 onClick={handleTogglePin}
                 className={`p-1.5 rounded-lg transition-colors ${isPinned ? 'text-primary-400 bg-primary-500/10' : 'text-text-muted hover:text-text-main hover:bg-white/5'}`}
@@ -180,13 +182,15 @@ const ChatItem = ({ chat, active, onClick }) => {
               >
                 <FiBellOff className="w-3.5 h-3.5" />
               </button>
-              <button 
-                onClick={handleDelete}
-                className="p-1.5 text-text-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                title="Delete"
-              >
-                <FiTrash2 className="w-3.5 h-3.5" />
-              </button>
+              {!isGlobalDirectory && (
+                <button 
+                  onClick={handleDelete}
+                  className="p-1.5 text-text-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                  title="Delete"
+                >
+                  <FiTrash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -196,4 +200,17 @@ const ChatItem = ({ chat, active, onClick }) => {
   );
 };
 
-export default ChatItem;
+// Custom comparison function for massive performance boost on lists!
+// Only re-render if the specific chat data we care about changes.
+export default React.memo(ChatItemMemo, (prevProps, nextProps) => {
+  return (
+    prevProps.active === nextProps.active &&
+    prevProps.chat.id === nextProps.chat.id &&
+    prevProps.chat.name === nextProps.chat.name &&
+    prevProps.chat.lastMessage === nextProps.chat.lastMessage &&
+    prevProps.chat.unread === nextProps.chat.unread &&
+    prevProps.chat.online === nextProps.chat.online &&
+    prevProps.chat.updatedAt?.toMillis?.() === nextProps.chat.updatedAt?.toMillis?.() &&
+    prevProps.isGlobalDirectory === nextProps.isGlobalDirectory
+  );
+});
