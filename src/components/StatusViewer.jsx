@@ -146,7 +146,7 @@ const StatusViewer = ({ userStatus, onClose, isPane = false }) => {
       transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
       className={`
         ${isPane ? 'relative w-full h-full rounded-2xl overflow-hidden shadow-2xl shadow-black/50' : 'fixed inset-0 z-[150]'}
-        bg-black flex flex-col items-center justify-center overflow-hidden
+        bg-black/90 flex flex-col items-center justify-center overflow-hidden
       `}
     >
       {/* Tap Areas */}

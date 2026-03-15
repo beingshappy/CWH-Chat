@@ -125,6 +125,10 @@
   html, body {
     @apply h-[100dvh] w-full m-0 p-0 overflow-hidden bg-bg-base text-text-main font-sans antialiased selection:bg-primary-500/20;
     overscroll-behavior: contain;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
   
   #root {

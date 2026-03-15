@@ -274,7 +274,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
           }}
         >
           {/* Mobile-friendly overlay instead of expensive CSS filter */}
-          <div className="absolute inset-0 bg-black/60 md:hidden" />
+          <div className="absolute inset-0 bg-black/40 md:hidden" />
           <div className="absolute inset-0 hidden md:block backdrop-brightness-[0.7]" />
         </div>
       )}

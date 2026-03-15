@@ -44,33 +44,30 @@ const Dashboard = () => {
           className={`
             flex-shrink-0 border-r border-glass-border glass-dark z-30 overflow-hidden
             ${(activeChat || activeStatus) ? 'hidden md:flex' : 'flex'} 
-            w-full md:w-80 lg:w-96
+            w-full md:w-80 lg:w-96 h-full
           `}
         >
-          <div className="w-full md:w-80 lg:w-96 h-full">
+          <div className="w-full h-full"> {/* Removed redundant width constraint */}
             <Sidebar />
           </div>
         </div>
         
-        {/* Main Content */}
-        <main className={`
-          flex-1 flex flex-col relative h-full min-w-0 min-h-0 z-30 overflow-visible md:overflow-hidden
-          ${(!activeChat && !activeStatus) ? 'hidden md:flex' : 'flex'}
-        `}>
-          <AnimatePresence mode="popLayout" initial={false}>
+        {/* Main Content Area */}
+        <main className="flex-1 flex flex-col relative h-full min-w-0 min-h-0 z-30 overflow-visible md:overflow-hidden">
+          <AnimatePresence mode="popLayout">
             {activeChat ? (
               <motion.div
                 key={`chat-${activeChat.id}`}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
+                initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98, y: 10 }}
                 transition={{ 
-                  type: 'tween',
-                  ease: [0.23, 1, 0.32, 1],
-                  duration: 0.2
+                  type: 'spring',
+                  damping: 25,
+                  stiffness: 200,
+                  mass: 0.5
                 }}
-                style={{ willChange: 'transform, opacity' }}
-                className="flex-1 flex flex-col min-h-0"
+                className="flex-1 flex flex-col min-h-0 fixed inset-0 z-[150] bg-transparent md:relative md:inset-auto md:z-30 md:bg-transparent"
               >
                 <ChatWindow
                   activeChat={activeChat}
@@ -82,16 +79,16 @@ const Dashboard = () => {
             ) : activeStatus ? (
               <motion.div
                 key={`status-${activeStatus.userId}`}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
+                initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98, y: 10 }}
                 transition={{ 
-                  type: 'tween',
-                  ease: [0.23, 1, 0.32, 1],
-                  duration: 0.2
+                  type: 'spring',
+                  damping: 25,
+                  stiffness: 200,
+                  mass: 0.5
                 }}
-                style={{ willChange: 'transform, opacity' }}
-                className="flex-1 flex flex-col min-h-0"
+                className="flex-1 flex flex-col min-h-0 fixed inset-0 z-[150] bg-transparent md:relative md:inset-auto md:z-30 md:bg-transparent"
               >
                 <StatusViewer
                   userStatus={activeStatus}
@@ -106,7 +103,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
-                className="flex-1 flex flex-col justify-center items-center bg-sidebar-premium px-6 overflow-hidden"
+                className="hidden md:flex flex-1 flex-col justify-center items-center bg-sidebar-premium px-6 overflow-hidden"
               />
             )}
           </AnimatePresence>
@@ -142,7 +139,7 @@ const Dashboard = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-              className="lg:hidden fixed inset-0 z-[150] bg-black/40 backdrop-blur-sm"
+              className="lg:hidden fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm"
               onClick={() => setShowInfo(false)}
             >
               <div 
