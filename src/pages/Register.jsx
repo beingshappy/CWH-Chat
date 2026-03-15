@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import BackgroundEffects from '../components/BackgroundEffects';
 import { useAuth } from '../context/AuthContext';
-
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -42,7 +40,6 @@ const Register = () => {
 
   return (
     <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start sm:justify-center p-4 sm:p-8 relative overflow-y-auto scrollbar-hide">
-      <BackgroundEffects />
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}

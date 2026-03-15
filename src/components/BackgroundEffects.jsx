@@ -14,7 +14,7 @@ const BackgroundEffects = () => {
       {/* WhatsApp-style Doodles Overlay - Crisp & Visible */}
       <div className={`absolute inset-0 bg-doodles ${isLight ? 'opacity-[0.05]' : 'opacity-[0.08]'} z-0`} />
 
-      {/* Subtle Primary Glow */}
+      {/* Subtle Primary Glow - Desktop Only */}
       <motion.div
         animate={{
           scale: [1, 1.1, 1],
@@ -23,10 +23,10 @@ const BackgroundEffects = () => {
           y: [0, -30, 0],
         }}
         transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-        className="absolute top-[-10%] left-[-5%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[100px]"
+        className="absolute top-[-10%] left-[-5%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[100px] hidden md:block"
       />
 
-      {/* Subtle Secondary Glow */}
+      {/* Subtle Secondary Glow - Desktop Only */}
       <motion.div
         animate={{
           scale: [1, 1.15, 1],
@@ -35,7 +35,7 @@ const BackgroundEffects = () => {
           y: [0, 50, 0],
         }}
         transition={{ duration: 35, repeat: Infinity, ease: 'linear' }}
-        className="absolute bottom-[-15%] right-[-5%] w-[60%] h-[60%] rounded-full bg-indigo-600/10 blur-[120px]"
+        className="absolute bottom-[-15%] right-[-5%] w-[60%] h-[60%] rounded-full bg-indigo-600/10 blur-[120px] hidden md:block"
       />
 
       {/* Sparse Particles for Performance */}

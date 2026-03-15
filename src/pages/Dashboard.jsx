@@ -57,14 +57,19 @@ const Dashboard = () => {
           flex-1 flex flex-col relative h-full min-w-0 min-h-0 z-30 overflow-visible md:overflow-hidden
           ${(!activeChat && !activeStatus) ? 'hidden md:flex' : 'flex'}
         `}>
-          <AnimatePresence mode="sync" initial={false}>
+          <AnimatePresence mode="popLayout" initial={false}>
             {activeChat ? (
               <motion.div
                 key={`chat-${activeChat.id}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ 
+                  type: 'tween',
+                  ease: [0.23, 1, 0.32, 1],
+                  duration: 0.2
+                }}
+                style={{ willChange: 'transform, opacity' }}
                 className="flex-1 flex flex-col min-h-0"
               >
                 <ChatWindow
@@ -77,10 +82,15 @@ const Dashboard = () => {
             ) : activeStatus ? (
               <motion.div
                 key={`status-${activeStatus.userId}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ 
+                  type: 'tween',
+                  ease: [0.23, 1, 0.32, 1],
+                  duration: 0.2
+                }}
+                style={{ willChange: 'transform, opacity' }}
                 className="flex-1 flex flex-col min-h-0"
               >
                 <StatusViewer

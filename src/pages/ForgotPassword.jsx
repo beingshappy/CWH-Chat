@@ -5,8 +5,6 @@ import { Link } from 'react-router-dom';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
 
-import BackgroundEffects from '../components/BackgroundEffects';
-
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,7 +32,6 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start sm:justify-center p-4 sm:p-8 relative overflow-y-auto scrollbar-hide">
-      <BackgroundEffects />
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}

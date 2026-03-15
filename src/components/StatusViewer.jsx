@@ -261,7 +261,7 @@ const StatusViewer = ({ userStatus, onClose, isPane = false }) => {
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="absolute inset-x-0 bottom-0 z-[100] max-h-[60%] bg-bg-surface/90 backdrop-blur-3xl rounded-t-[2.5rem] border-t border-glass-border flex flex-col shadow-[0_-20px_40px_rgba(0,0,0,0.5)]"
+                className="absolute inset-x-0 bottom-0 z-[100] max-h-[60%] bg-bg-surface/80 md:bg-bg-surface/90 md:backdrop-blur-3xl rounded-t-[2.5rem] border-t border-glass-border flex flex-col shadow-[0_-20px_40px_rgba(0,0,0,0.5)]"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1" />

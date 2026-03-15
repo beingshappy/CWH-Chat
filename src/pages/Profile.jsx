@@ -7,8 +7,6 @@ import { db, storage } from '../firebase/firebaseConfig';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
-import BackgroundEffects from '../components/BackgroundEffects';
-
 const Profile = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -61,10 +59,9 @@ const Profile = () => {
 
   return (
     <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative">
-      <BackgroundEffects />
 
       {/* Header */}
-      <div className="h-16 px-6 flex items-center space-x-4 bg-bg-surface/60 backdrop-blur-xl border-b border-glass-border z-10">
+      <div className="h-16 px-6 flex items-center space-x-4 bg-bg-surface/60 md:backdrop-blur-xl border-b border-glass-border z-10">
         <button onClick={() => navigate('/')} className="p-2 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors">
           <FiArrowLeft className="w-5 h-5" />
         </button>

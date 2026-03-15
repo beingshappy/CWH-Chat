@@ -4,7 +4,6 @@ import { FiArrowLeft, FiBell, FiMoon, FiLock, FiLogOut, FiUser, FiChevronRight }
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import BackgroundEffects from '../components/BackgroundEffects';
 
 const ToggleSwitch = ({ enabled, onChange, label, description, icon: Icon }) => (
   <div className="flex items-center justify-between p-4 rounded-xl hover:bg-bg-surface-hover transition-colors cursor-pointer" onClick={() => onChange(!enabled)}>
@@ -41,10 +40,9 @@ const Settings = () => {
 
   return (
     <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative">
-      <BackgroundEffects />
 
       {/* Header */}
-      <div className="h-16 px-6 flex items-center space-x-4 bg-bg-surface/60 backdrop-blur-xl border-b border-glass-border z-10">
+      <div className="h-16 px-6 flex items-center space-x-4 bg-bg-surface/60 md:backdrop-blur-xl border-b border-glass-border z-10">
         <button onClick={() => navigate('/')} className="p-2 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors">
           <FiArrowLeft className="w-5 h-5" />
         </button>

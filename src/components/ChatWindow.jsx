@@ -271,9 +271,12 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             opacity: 0.15,
-            filter: 'brightness(0.7)'
           }}
-        />
+        >
+          {/* Mobile-friendly overlay instead of expensive CSS filter */}
+          <div className="absolute inset-0 bg-black/60 md:hidden" />
+          <div className="absolute inset-0 hidden md:block backdrop-brightness-[0.7]" />
+        </div>
       )}
       {/* Mobile More Menu - MOVED TO TOP LEVEL TO PREVENT CLIPPING */}
       <AnimatePresence>
@@ -284,7 +287,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="fixed top-20 right-4 w-56 bg-[#0a0c10]/95 backdrop-blur-3xl border border-white/5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] z-[1000] overflow-hidden sm:hidden"
+              className="fixed top-20 right-4 w-56 bg-[#0a0c10]/95 md:backdrop-blur-3xl border border-white/5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] z-[1000] overflow-hidden sm:hidden"
             >
               <button 
                 onClick={() => { setIsSearchOpen(true); setShowMoreMenu(false); }}
@@ -385,7 +388,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="bg-bg-surface/40 backdrop-blur-xl border-b border-glass-border p-3"
+              className="bg-bg-surface/40 md:backdrop-blur-xl border-b border-glass-border p-3"
             >
             <div className="flex items-center space-x-3">
               <div className="relative flex-1">

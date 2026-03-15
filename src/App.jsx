@@ -22,7 +22,7 @@ const AnimatedRoutes = () => {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="popLayout" initial={false}>
       <Routes location={location} key={location.pathname}>
         <Route path="/login" element={!currentUser ? <PageTransition><Login /></PageTransition> : <Navigate to="/" replace />} />
         <Route path="/register" element={!currentUser ? <PageTransition><Register /></PageTransition> : <Navigate to="/" replace />} />

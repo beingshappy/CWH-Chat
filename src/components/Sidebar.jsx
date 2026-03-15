@@ -133,13 +133,13 @@ const Sidebar = () => {
           className="flex-1 overflow-y-scroll scrollbar-custom pb-20 md:pb-0 relative" 
           style={{ overscrollBehaviorY: 'contain', scrollbarGutter: 'stable' }}
         >
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
               className="min-h-full"
             >
               {activeTab === 'status' ? (
