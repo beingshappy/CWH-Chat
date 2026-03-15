@@ -39,7 +39,7 @@ const Profile = () => {
         photoURL = await uploadImage(avatarFile);
       }
 
-      await updateProfile(auth.currentUser, { displayName, photoURL });
+      await updateProfile(currentUser, { displayName, photoURL });
       await updateDoc(doc(db, 'users', currentUser.uid), {
         name: displayName,
         avatar: photoURL,
