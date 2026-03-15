@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { FiPaperclip, FiSmile, FiSend, FiImage, FiX, FiMic, FiSquare } from 'react-icons/fi';
+import { FiPaperclip, FiSmile, FiSend, FiImage, FiX, FiMic, FiSquare, FiMapPin, FiFileText } from 'react-icons/fi';
 import EmojiPicker from 'emoji-picker-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChat } from '../context/ChatContext';
@@ -11,6 +11,9 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const { replyTo, setReplyTo } = useChat();
+  const [isLocating, setIsLocating] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const attachMenuRef = useRef(null);
   
   // Recording states
   const [isRecording, setIsRecording] = useState(false);
@@ -103,6 +106,18 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (attachMenuRef.current && !attachMenuRef.current.contains(event.target)) {
+        setShowAttachMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const onEmojiClick = (emojiObject) => {
     setMessage(prev => prev + emojiObject.emoji);
   };
@@ -125,6 +140,30 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
     setPreviewUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
+  const shareLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setIsLocating(false);
+        const { latitude, longitude } = position.coords;
+        const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        onSend(mapsUrl, null, replyTo);
+        setReplyTo(null);
+      },
+      (error) => {
+        setIsLocating(false);
+        console.error("Error getting location:", error);
+        alert("Unable to retrieve your location. Please ensure location permissions are granted.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   return (
@@ -235,7 +274,7 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
       <form onSubmit={handleSubmit} className="flex items-end space-x-1 sm:space-x-2">
         {!isRecording ? (
           <>
-            <div className="flex space-x-0 sm:space-x-1 mb-1 sm:mb-1.5">
+            <div className="flex space-x-0 sm:space-x-1 mb-1 sm:mb-1.5 items-center">
               <button 
                 type="button" 
                 disabled={isBlocked}
@@ -245,16 +284,58 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
                 <FiSmile className="w-5 h-5" />
               </button>
               
-              <button 
-                type="button" 
-                disabled={isBlocked}
-                onClick={() => fileInputRef.current?.click()}
-                className={`p-1.5 sm:p-2 transition-colors rounded-full ${isBlocked ? 'opacity-20 cursor-not-allowed' : 'text-text-muted hover:text-text-main hover:bg-white/10'}`}
-                title="Attach Document"
-              >
-                <FiPaperclip className="w-5 h-5" />
-              </button>
-              
+              <div className="relative" ref={attachMenuRef}>
+                <button 
+                  type="button" 
+                  disabled={isBlocked || isLocating}
+                  onClick={() => setShowAttachMenu(!showAttachMenu)}
+                  className={`p-1.5 sm:p-2 transition-colors rounded-full ${isBlocked || isLocating ? 'opacity-20 cursor-not-allowed' : (showAttachMenu ? 'text-primary-400 bg-primary-500/10' : 'text-text-muted hover:text-text-main hover:bg-white/10')}`}
+                  title="Attachments"
+                >
+                  <FiPaperclip className={`w-5 h-5 transition-transform duration-300 ${showAttachMenu ? 'rotate-45' : ''}`} />
+                </button>
+
+                {ReactDOM.createPortal(
+                  <AnimatePresence>
+                    {showAttachMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="fixed bottom-[72px] left-16 sm:left-20 md:left-[calc(320px+4rem)] lg:left-[calc(384px+4rem)] mb-2 w-48 bg-bg-surface/95 backdrop-blur-xl border border-glass-border rounded-2xl shadow-2xl overflow-hidden py-1 z-[9999] flex flex-col"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => { fileInputRef.current?.click(); setShowAttachMenu(false); }}
+                          className="flex items-center space-x-3 px-4 py-3 text-sm text-text-main hover:bg-white/10 transition-colors w-full text-left"
+                        >
+                          <div className="p-2 rounded-full bg-blue-500/20 text-blue-400">
+                            <FiFileText className="w-4 h-4" />
+                          </div>
+                          <span className="font-medium">Document</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { shareLocation(); setShowAttachMenu(false); }}
+                          className="flex items-center space-x-3 px-4 py-3 text-sm text-text-main hover:bg-white/10 transition-colors w-full text-left border-t border-glass-border/30"
+                        >
+                          <div className="p-2 rounded-full bg-red-500/20 text-red-400">
+                            {isLocating ? (
+                              <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <FiMapPin className="w-4 h-4" />
+                            )}
+                          </div>
+                          <span className="font-medium">Location</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>,
+                  document.body
+                )}
+              </div>
+
               <button 
                 type="button" 
                 disabled={isBlocked}

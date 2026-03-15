@@ -10,7 +10,7 @@ import { isActuallyOnline, formatLastSeen } from '../utils/presence';
 
 const InfoPanel = ({ activeChat, close }) => {
   const { currentUser } = useAuth();
-  const { users, setActiveChat, toggleMuteChat, updateChatWallpaper, toggleBlockUser, currentUserProfile, deleteChat, clearChatMessages } = useChat();
+  const { users, setActiveChat, toggleMuteChat, updateChatWallpaper, toggleBlockUser, currentUserProfile, deleteChat, clearChatMessages, showPopup } = useChat();
 
   const isGroup = activeChat?.isGroup;
   const isAdmin = activeChat?.admins?.includes(currentUser?.uid);
@@ -329,10 +329,13 @@ const InfoPanel = ({ activeChat, close }) => {
           ) : (
             <div className="space-y-2">
               <button 
-                onClick={async () => {
-                  if (window.confirm('Clear all messages in this chat? This cannot be undone.')) {
-                    await clearChatMessages(activeChat.id);
-                  }
+                onClick={() => {
+                  showPopup({
+                    type: 'confirm',
+                    title: 'Clear Chat History?',
+                    message: 'Are you sure you want to clear all messages in this chat? This cannot be undone.',
+                    onConfirm: async () => await clearChatMessages(activeChat.id)
+                  });
                 }}
                 className="w-full flex items-center space-x-3 p-3 text-orange-400 hover:bg-orange-500/10 rounded-xl transition-colors"
                 title="Wipe conversation history"
@@ -342,11 +345,16 @@ const InfoPanel = ({ activeChat, close }) => {
               </button>
 
               <button 
-                onClick={async () => {
-                  if (window.confirm('Delete this chat from your list? It will reappear if you receive a new message.')) {
-                    await deleteChat(activeChat.id);
-                    close();
-                  }
+                onClick={() => {
+                  showPopup({
+                    type: 'destructive',
+                    title: 'Delete Chat?',
+                    message: 'Are you sure you want to delete this chat from your list? It will reappear if you receive a new message.',
+                    onConfirm: async () => {
+                      await deleteChat(activeChat.id);
+                      close();
+                    }
+                  });
                 }}
                 className="w-full flex items-center space-x-3 p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors font-semibold"
                 title="Hide this conversation"

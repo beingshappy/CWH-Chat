@@ -1,6 +1,6 @@
 import React, { useState, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiDownload, FiFile, FiCornerUpLeft, FiSmile, FiEdit2, FiTrash2, FiHeart, FiThumbsUp, FiStar, FiZap, FiCheckCircle, FiImage, FiShare2, FiMic, FiPlay, FiPause } from 'react-icons/fi';
+import { FiDownload, FiFile, FiCornerUpLeft, FiSmile, FiEdit2, FiTrash2, FiHeart, FiThumbsUp, FiStar, FiZap, FiCheckCircle, FiImage, FiShare2, FiMic, FiPlay, FiPause, FiMapPin } from 'react-icons/fi';
 import { db } from '../firebase/firebaseConfig';
 import { doc, deleteDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
@@ -523,10 +523,36 @@ const MessageBubble = ({ message, isMe, grouped = false, chatId, onForward }) =>
             </div>
           ) : (
             message.text && (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                {message.text}
-                {message.edited && <span className="text-[10px] opacity-60 ml-1 italic">(edited)</span>}
-              </p>
+              message.text.startsWith('https://www.google.com/maps?q=') ? (
+                <a 
+                  href={message.text} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="block relative rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 w-full sm:w-64 border border-white/10 group"
+                >
+                  <div className="absolute inset-0 bg-black/60 z-10" />
+                  <div className="h-32 w-full bg-[#1e293b] relative grid" style={{
+                    backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)',
+                    backgroundSize: '16px 16px'
+                  }}>
+                    <div className="absolute inset-0 flex items-center justify-center z-20">
+                      <div className="relative">
+                        <FiMapPin className="w-10 h-10 text-red-500 drop-shadow-md relative z-10" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-red-500/30 animate-ping" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent z-20">
+                    <p className="text-sm font-semibold text-white truncate">Shared Location</p>
+                    <p className="text-xs text-white/70">Click to open in Maps</p>
+                  </div>
+                </a>
+              ) : (
+                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                  {message.text}
+                  {message.edited && <span className="text-[10px] opacity-60 ml-1 italic">(edited)</span>}
+                </p>
+              )
             )
           )}
 

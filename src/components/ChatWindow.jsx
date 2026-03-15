@@ -259,7 +259,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
 
   return (
     <div 
-      className="flex-1 flex flex-col h-full relative overflow-hidden"
+      className="flex-1 flex flex-col h-full relative"
       style={{ paddingBottom: keyboardHeight > 0 ? `${keyboardHeight}px` : 0 }}
     >
       {/* Dynamic Chat Wallpaper */}
