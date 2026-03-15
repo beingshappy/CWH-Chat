@@ -36,8 +36,13 @@ export const uploadMedia = async (file) => {
     const cleanId = `${Date.now()}_${fileNameWithExt.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     formData.append('public_id', cleanId);
 
-    // Using the 'raw' endpoint for non-image files
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`, {
+    // For non-images, determine Cloudinary resource type
+    const isAudio = file.type.startsWith('audio/');
+    const resourceType = isAudio ? 'video' : 'raw';
+    
+    console.log(`[MediaService] Uploading to Cloudinary (${resourceType})...`);
+    
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`, {
       method: 'POST',
       body: formData,
     });

@@ -94,18 +94,18 @@ const CallOverlay = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-xl flex flex-col items-center justify-center p-4"
+                className="fixed inset-0 z-[9999] bg-bg-base/90 backdrop-blur-xl flex flex-col items-center justify-center p-4"
             >
                 {/* 1. Ringing State (Outgoing/Incoming) */}
                 {activeCall.status === 'ringing' && (
-                    <div className="text-center space-y-8 max-w-sm w-full bg-slate-900/50 p-10 rounded-3xl border border-white/5 shadow-2xl">
+                    <div className="text-center space-y-8 max-w-sm w-full bg-bg-surface/50 p-10 rounded-3xl border border-glass-border shadow-2xl">
                         <div className="relative mx-auto w-32 h-32">
                            <motion.div 
                                 animate={{ scale: [1, 1.2, 1] }} 
                                 transition={{ repeat: Infinity, duration: 2 }}
                                 className="absolute inset-0 bg-primary-500/20 rounded-full" 
                            />
-                           <div className="relative bg-slate-800 rounded-full w-full h-full flex items-center justify-center text-4xl border-2 border-primary-500/30 overflow-hidden shadow-inner">
+                           <div className="relative bg-bg-surface rounded-full w-full h-full flex items-center justify-center text-4xl border-2 border-primary-500/30 overflow-hidden shadow-inner">
                              {activeCall.callerPhoto ? <img src={activeCall.callerPhoto} className="w-full h-full object-cover" /> : '👤'}
                            </div>
                         </div>
@@ -114,7 +114,7 @@ const CallOverlay = () => {
                             <h2 className="text-2xl font-bold text-white">
                                 {isCaller ? `Calling ${activeCall.receiverName}...` : `Incoming ${activeCall.type} Call`}
                             </h2>
-                            {!isCaller && <p className="text-slate-400 font-medium">{activeCall.callerName} is calling you</p>}
+                            {!isCaller && <p className="text-text-muted font-medium">{activeCall.callerName} is calling you</p>}
                         </div>
 
                         <div className="flex items-center justify-center space-x-6">

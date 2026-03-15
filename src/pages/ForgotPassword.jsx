@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
 
+import BackgroundEffects from '../components/BackgroundEffects';
+
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,12 +33,8 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start sm:justify-center p-4 sm:p-8 relative overflow-y-auto bg-bg-base scrollbar-hide">
-      {/* Animated background blobs */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary-600/20 blur-[140px] animate-pulse" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent-600/20 blur-[140px] animate-pulse" style={{ animationDelay: '1s' }} />
-      </div>
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start sm:justify-center p-4 sm:p-8 relative overflow-y-auto scrollbar-hide">
+      <BackgroundEffects />
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
@@ -48,8 +46,8 @@ const ForgotPassword = () => {
           <div className="w-14 h-14 bg-primary-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary-500/30">
             <FiMail className="w-7 h-7 text-primary-400" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Reset Password</h1>
-          <p className="text-slate-400 text-sm">
+          <h1 className="text-2xl font-bold text-text-main mb-2">Reset Password</h1>
+          <p className="text-text-muted text-sm">
             Enter your email and we'll send you a reset link
           </p>
         </div>
@@ -65,8 +63,8 @@ const ForgotPassword = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-white font-semibold mb-2">Email Sent!</h2>
-            <p className="text-slate-400 text-sm mb-6">
+            <h2 className="text-text-main font-semibold mb-2">Email Sent!</h2>
+            <p className="text-text-muted text-sm mb-6">
               Check your inbox at <span className="text-primary-400 font-medium">{email}</span> for the reset link.
             </p>
             <Link
@@ -90,10 +88,10 @@ const ForgotPassword = () => {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Email Address</label>
+              <label className="block text-sm font-medium text-text-muted mb-1.5">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <FiMail className="h-4 w-4 text-slate-500" />
+                  <FiMail className="h-4 w-4 text-text-muted" />
                 </div>
                 <input
                   type="email"
@@ -102,7 +100,7 @@ const ForgotPassword = () => {
                   placeholder="you@example.com"
                   required
                   aria-label="Email address"
-                  className="w-full pl-10 pr-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
+                  className="w-full pl-10 pr-4 py-3 bg-bg-surface/50 border border-glass-border rounded-xl text-text-main placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
                 />
               </div>
             </div>
@@ -125,7 +123,7 @@ const ForgotPassword = () => {
             <div className="text-center">
               <Link
                 to="/login"
-                className="inline-flex items-center space-x-1.5 text-slate-400 hover:text-white transition-colors text-sm"
+                className="inline-flex items-center space-x-1.5 text-text-muted hover:text-text-main transition-colors text-sm"
               >
                 <FiArrowLeft className="w-4 h-4" />
                 <span>Back to Login</span>

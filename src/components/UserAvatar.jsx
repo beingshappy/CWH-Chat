@@ -49,7 +49,7 @@ const UserAvatar = ({ src, name = 'U', online = false, size = 'md', className = 
         alt={name}
         aria-label={`${name} avatar`}
         onError={(e) => { e.target.src = fallbackUrl; }}
-        className={`${sizes[size]} rounded-full object-cover border border-slate-700/70 select-none`}
+        className={`${sizes[size]} rounded-full object-cover border border-glass-border/40 select-none`}
       />
       {online && (
         <span

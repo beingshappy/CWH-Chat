@@ -55,12 +55,14 @@ const CreateGroupModal = ({ onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
         className="w-full max-w-md glass-card rounded-2xl overflow-hidden"
       >
         {/* Header */}
@@ -69,7 +71,7 @@ const CreateGroupModal = ({ onClose }) => {
             <FiUsers className="w-5 h-5 text-primary-400" />
             <h2 className="font-semibold">Create Group</h2>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors">
             <FiX className="w-4 h-4" />
           </button>
         </div>
@@ -81,7 +83,7 @@ const CreateGroupModal = ({ onClose }) => {
             placeholder="Group name…"
             value={groupName}
             onChange={e => setGroupName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm"
+            className="w-full px-4 py-3 rounded-xl bg-bg-surface/50 border border-glass-border text-text-main placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm"
           />
 
           {/* Group Description */}
@@ -89,18 +91,18 @@ const CreateGroupModal = ({ onClose }) => {
             placeholder="Group description (optional)…"
             value={description}
             onChange={e => setDescription(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm resize-none h-20"
+            className="w-full px-4 py-3 rounded-xl bg-bg-surface/50 border border-glass-border text-text-main placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm resize-none h-20"
           />
 
           {/* Member Search */}
           <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input
               type="text"
               placeholder="Search members…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700/50 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all text-sm"
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-bg-surface/50 border border-glass-border text-text-main placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all text-sm"
             />
           </div>
 
@@ -132,7 +134,7 @@ const CreateGroupModal = ({ onClose }) => {
                   <img src={user.avatar} alt={user.name} className="w-9 h-9 rounded-full object-cover" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-white">{user.name}</p>
-                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                    <p className="text-xs text-text-muted truncate">{user.email}</p>
                   </div>
                   {isSelected && (
                     <div className="w-5 h-5 bg-primary-500 rounded-full flex items-center justify-center">

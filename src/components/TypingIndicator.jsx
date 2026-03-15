@@ -18,12 +18,12 @@ const TypingIndicator = ({ users = [] }) => {
       transition={{ duration: 0.2 }}
       className="flex items-center space-x-2 self-start py-1"
     >
-      <div className="flex items-center space-x-1.5 bg-slate-800/80 border border-slate-700/50 rounded-2xl rounded-tl-sm px-4 py-2.5">
-        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1s' }} />
-        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '200ms', animationDuration: '1s' }} />
-        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '400ms', animationDuration: '1s' }} />
+      <div className="flex items-center space-x-1.5 bg-bg-surface border border-glass-border rounded-2xl rounded-tl-sm px-4 py-2.5">
+        <span className="w-1.5 h-1.5 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1s' }} />
+        <span className="w-1.5 h-1.5 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '200ms', animationDuration: '1s' }} />
+        <span className="w-1.5 h-1.5 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '400ms', animationDuration: '1s' }} />
       </div>
-      <span className="text-[11px] text-slate-500 font-medium">{typingString}</span>
+      <span className="text-[11px] text-text-muted font-medium">{typingString}</span>
     </motion.div>
   );
 };

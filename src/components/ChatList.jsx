@@ -3,9 +3,10 @@ import ChatItem from './ChatItem';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 import { isActuallyOnline, formatLastSeen } from '../utils/presence';
+import { ChatListSkeleton } from './Skeletons';
 
-const ChatList = ({ activeTab, searchQuery, filteredUsers }) => {
-  const { chats, activeChat, setActiveChat, startDirectMessage, users, loading, syncProfile } = useChat();
+const ChatList = ({ activeTab, searchQuery, filteredUsers, filteredChats = [] }) => {
+  const { chats, activeChat, setActiveChat, startDirectMessage, users, loading, syncProfile, setActiveStatus } = useChat();
   const { currentUser } = useAuth();
 
   // Resolve display info for a DM chat (other participant's name/avatar)
@@ -25,32 +26,43 @@ const ChatList = ({ activeTab, searchQuery, filteredUsers }) => {
 
   const handleUserClick = async (user) => {
     try {
+      setActiveStatus(null);
       await startDirectMessage(user);
     } catch (error) {
       console.error('Error starting chat:', error);
     }
   };
 
+  const sortedChats = [...(searchQuery ? filteredChats : chats)].sort((a, b) => {
+    const isAPinned = a.pinnedBy?.includes(currentUser?.uid);
+    const isBPinned = b.pinnedBy?.includes(currentUser?.uid);
+    if (isAPinned && !isBPinned) return -1;
+    if (!isAPinned && isBPinned) return 1;
+    
+    const timeA = a.updatedAt?.toDate?.() || 0;
+    const timeB = b.updatedAt?.toDate?.() || 0;
+    return timeB - timeA;
+  });
+
   if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <ChatListSkeleton />;
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-2 space-y-1 py-2 custom-scrollbar min-h-0">
+    <div className="px-2 space-y-1 py-2 min-h-0">
       {activeTab === 'chats' ? (
-        chats.length > 0 ? (
-          chats.map((chat) => {
+        sortedChats.length > 0 ? (
+          sortedChats.map((chat) => {
             const resolved = resolveChatMeta(chat);
             return (
               <ChatItem
                 key={chat.id}
                 chat={resolved}
                 active={activeChat?.id === chat.id}
-                onClick={() => setActiveChat(resolved)}
+                onClick={() => {
+                  setActiveStatus(null);
+                  setActiveChat(resolved);
+                }}
               />
             );
           })

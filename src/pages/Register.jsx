@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import BackgroundEffects from '../components/BackgroundEffects';
 import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
@@ -40,11 +41,8 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start sm:justify-center p-4 sm:p-8 relative overflow-y-auto bg-bg-base scrollbar-hide">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-accent-600/20 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary-600/20 blur-[120px]" />
-      </div>
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-start sm:justify-center p-4 sm:p-8 relative overflow-y-auto scrollbar-hide">
+      <BackgroundEffects />
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}

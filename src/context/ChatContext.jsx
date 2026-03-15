@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { db, storage } from '../firebase/firebaseConfig';
 import { 
   collection, 
@@ -12,7 +12,10 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  limit
+  limit,
+  arrayUnion,
+  arrayRemove,
+  Timestamp
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useAuth } from './AuthContext';
@@ -23,13 +26,18 @@ export const useChat = () => useContext(ChatContext);
 
 export const ChatProvider = ({ children }) => {
   const { currentUser } = useAuth();
+  const [currentUserProfile, setCurrentUserProfile] = useState(null);
   const [users, setUsers] = useState([]);
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [replyTo, setReplyTo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [popup, setPopup] = useState({ show: false, title: '', message: '', type: 'info', onConfirm: null });
   const [activeCall, setActiveCall] = useState(null);
   const [callHistory, setCallHistory] = useState([]);
+  const [statuses, setStatuses] = useState([]);
+  const [activeStatus, setActiveStatus] = useState(null);
+  const userCache = useRef({});
 
   // Subscribe to all users (for creating new chats)
   useEffect(() => {
@@ -52,6 +60,20 @@ export const ChatProvider = ({ children }) => {
       console.error('[ChatContext] Users subscription failed:', error);
     });
 
+    return unsubscribe;
+  }, [currentUser]);
+
+  // Subscribe to current user's profile (for dynamic status/avatar sync)
+  useEffect(() => {
+    if (!currentUser) {
+      setCurrentUserProfile(null);
+      return;
+    }
+    const unsubscribe = onSnapshot(doc(db, 'users', currentUser.uid), (doc) => {
+      if (doc.exists()) {
+        setCurrentUserProfile({ id: doc.id, ...doc.data() });
+      }
+    });
     return unsubscribe;
   }, [currentUser]);
 
@@ -97,6 +119,16 @@ export const ChatProvider = ({ children }) => {
       });
 
       setChats(chatsData);
+      
+      // Keep activeChat in sync with raw data updates (admins, members, etc)
+      setActiveChat(current => {
+        if (!current) return null;
+        const updated = chatsData.find(c => c.id === current.id);
+        if (!updated) return current;
+        // Merge preserved UI metadata (like otherUserId) with fresh Firestore data
+        return { ...current, ...updated };
+      });
+
       setLoading(false);
     }, (error) => {
       console.error('[ChatContext] Chats subscription failed:', error);
@@ -156,25 +188,97 @@ export const ChatProvider = ({ children }) => {
     const q = query(
       collection(db, 'calls'),
       where('status', '==', 'ended'),
-      orderBy('endedAt', 'desc'),
-      limit(50)
+      limit(200) // Increase limit slightly for local sorting
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const history = [];
+      let history = [];
       snapshot.forEach(doc => {
         const data = doc.data();
         if (data.callerId === currentUser.uid || data.receiverId === currentUser.uid) {
            history.push({ id: doc.id, ...data });
         }
       });
-      setCallHistory(history);
+
+      // Sort locally by endedAt desc
+      history.sort((a, b) => {
+        const timeA = a.endedAt?.toDate?.()?.getTime() || a.createdAt?.toDate?.()?.getTime() || 0;
+        const timeB = b.endedAt?.toDate?.()?.getTime() || b.createdAt?.toDate?.()?.getTime() || 0;
+        return timeB - timeA;
+      });
+
+      setCallHistory(history.slice(0, 50));
     }, (error) => {
         console.warn('[ChatContext] Call history subscription error:', error);
     });
 
     return unsubscribe;
   }, [currentUser]);
+
+  // Subscribe to Statuses (24h)
+  useEffect(() => {
+    if (!currentUser) {
+      setStatuses([]);
+      return;
+    }
+
+    const startTime = Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
+    const q = query(
+      collection(db, 'statuses'),
+      where('createdAt', '>', startTime),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const statusesByUser = {};
+      snapshot.forEach(docSnap => {
+        const data = { id: docSnap.id, ...docSnap.data() };
+        if (!statusesByUser[data.userId]) {
+          statusesByUser[data.userId] = {
+            userId: data.userId,
+            userName: data.userName,
+            userAvatar: data.userAvatar,
+            stories: []
+          };
+        }
+        statusesByUser[data.userId].stories.push(data);
+      });
+
+      // Sort: Current user first, then by newest stories
+      const sortedStatuses = Object.values(statusesByUser).sort((a, b) => {
+        if (a.userId === currentUser.uid) return -1;
+        if (b.userId === currentUser.uid) return 1;
+        const newestA = a.stories[0]?.createdAt?.toDate?.() || 0;
+        const newestB = b.stories[0]?.createdAt?.toDate?.() || 0;
+        return newestB - newestA;
+      });
+
+      setStatuses(sortedStatuses);
+    }, (err) => {
+      console.warn('[ChatContext] Status subscription error:', err);
+    });
+
+    return unsubscribe;
+  }, [currentUser]);
+
+  const toggleBlockUser = async (targetUserId) => {
+    if (!currentUser) return;
+    try {
+      const isBlocked = currentUserProfile?.blockedUsers?.includes(targetUserId);
+      await updateDoc(doc(db, 'users', currentUser.uid), {
+        blockedUsers: isBlocked ? arrayRemove(targetUserId) : arrayUnion(targetUserId)
+      });
+      
+      showPopup({
+        title: isBlocked ? 'User Unblocked' : 'User Blocked',
+        message: isBlocked ? 'You can now exchange messages and calls again.' : 'You will no longer receive messages or calls from this user.',
+        type: 'info'
+      });
+    } catch (e) {
+      console.error('[ChatContext] Toggle block failed:', e);
+      showPopup({ title: 'Error', message: 'Failed to update block status.', type: 'error' });
+    }
+  };
 
   const startDirectMessage = async (otherUser) => {
     // Check if chat already exists locally
@@ -220,6 +324,16 @@ export const ChatProvider = ({ children }) => {
   const sendMessage = async (chatId, text, file = null, replyData = null) => {
     if (!text.trim() && !file) return;
 
+    // Block Check
+    const otherMember = activeChat?.members?.find(m => m !== currentUser.uid);
+    if (!activeChat?.isGroup && otherMember) {
+      const otherUserDoc = users.find(u => u.id === otherMember);
+      if (currentUserProfile?.blockedUsers?.includes(otherMember) || otherUserDoc?.blockedUsers?.includes(currentUser.uid)) {
+        showPopup({ title: 'Message Not Sent', message: 'You cannot send messages to a blocked contact.', type: 'error' });
+        return;
+      }
+    }
+
     try {
       let fileUrl = null;
       let fileType = null;
@@ -228,7 +342,13 @@ export const ChatProvider = ({ children }) => {
       if (file) {
         const { uploadMedia } = await import('../utils/mediaService');
         fileUrl = await uploadMedia(file);
-        fileType = file.type.startsWith('image/') ? 'image' : 'file';
+        if (file.type.startsWith('image/')) {
+          fileType = 'image';
+        } else if (file.type.startsWith('audio/')) {
+          fileType = 'audio';
+        } else {
+          fileType = 'file';
+        }
         fileName = file.name;
       }
 
@@ -321,7 +441,6 @@ export const ChatProvider = ({ children }) => {
             timestamp: serverTimestamp()
         });
       } else {
-        const { deleteDoc, doc } = await import('firebase/firestore');
         await deleteDoc(doc(db, 'typing', typingId));
       }
     } catch (e) {
@@ -352,6 +471,13 @@ export const ChatProvider = ({ children }) => {
   const startCall = async (receiverId, receiverName, type = 'video') => {
     if (!currentUser || !receiverId) {
       console.warn('[ChatContext] Cannot start call: No receiverId provided');
+      return;
+    }
+
+    // Block Check
+    const receiverDoc = users.find(u => u.id === receiverId);
+    if (currentUserProfile?.blockedUsers?.includes(receiverId) || receiverDoc?.blockedUsers?.includes(currentUser.uid)) {
+      showPopup({ title: 'Call Failed', message: 'You cannot call a blocked contact.', type: 'error' });
       return;
     }
 
@@ -388,15 +514,205 @@ export const ChatProvider = ({ children }) => {
   const endCall = async () => {
     if (!activeCall) return;
     try {
+      const endedAt = new Date();
       await updateDoc(doc(db, 'calls', activeCall.id), {
         status: 'ended',
         endedAt: serverTimestamp()
       });
+      
+      // Proactively update call history locally for high-speed feel
+      const completedCall = { 
+        ...activeCall, 
+        status: 'ended', 
+        endedAt: { toDate: () => endedAt } // Mock Firestore timestamp for local UI
+      };
+      
+      setCallHistory(prev => {
+        // Only add if not already present (listener might have fired)
+        if (prev.find(c => c.id === completedCall.id)) return prev;
+        return [completedCall, ...prev].slice(0, 50);
+      });
+
       setActiveCall(null);
     } catch (e) { console.error('[ChatContext] End failed:', e); }
   };
 
-  const value = {
+  const postStatus = async (statusData) => {
+    if (!currentUser) return;
+    try {
+      const docRef = await addDoc(collection(db, 'statuses'), {
+        ...statusData,
+        userId: currentUser.uid,
+        userName: currentUser.displayName || 'User',
+        userAvatar: currentUser.photoURL || '',
+        createdAt: serverTimestamp(),
+        viewers: []
+      });
+      return docRef.id;
+    } catch (e) {
+      console.error('[ChatContext] Post status failed:', e);
+      throw e;
+    }
+  };
+
+  const viewStatus = async (statusId) => {
+    if (!currentUser) return;
+    try {
+      await updateDoc(doc(db, 'statuses', statusId), {
+        viewers: arrayUnion(currentUser.uid)
+      });
+    } catch (e) {
+      console.warn('[ChatContext] View status update failed:', e);
+    }
+  };
+
+  const updateChatWallpaper = async (chatId, wallpaperUrl) => {
+    if (!currentUser) return;
+    try {
+      await updateDoc(doc(db, 'chats', chatId), {
+        [`wallpapers.${currentUser.uid}`]: wallpaperUrl
+      });
+    } catch (e) {
+      console.error('[ChatContext] Update wallpaper failed:', e);
+    }
+  };
+
+  const deleteStatus = async (statusId) => {
+    try {
+      await deleteDoc(doc(db, 'statuses', statusId));
+    } catch (e) {
+      console.error('[ChatContext] Delete status failed:', e);
+    }
+  };
+
+  const togglePinChat = async (chatId) => {
+    if (!currentUser) return;
+    try {
+      const chat = chats.find(c => c.id === chatId);
+      const isPinned = chat?.pinnedBy?.includes(currentUser.uid);
+      await updateDoc(doc(db, 'chats', chatId), {
+        pinnedBy: isPinned ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid)
+      });
+    } catch (e) {
+      console.error('[ChatContext] Toggle pin failed:', e);
+    }
+  };
+
+  const toggleMuteChat = async (chatId) => {
+    if (!currentUser) return;
+    try {
+      const chat = chats.find(c => c.id === chatId);
+      const isMuted = chat?.mutedBy?.includes(currentUser.uid);
+      await updateDoc(doc(db, 'chats', chatId), {
+        mutedBy: isMuted ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid)
+      });
+    } catch (e) {
+      console.error('[ChatContext] Toggle mute failed:', e);
+    }
+  };
+
+  const deleteChat = async (chatId) => {
+    try {
+      if (activeChat?.id === chatId) setActiveChat(null);
+      await deleteDoc(doc(db, 'chats', chatId));
+      console.log(`[ChatContext] Chat deleted: ${chatId}`);
+    } catch (e) {
+      console.error('[ChatContext] Delete chat failed:', e);
+      showPopup({
+        title: 'Delete Failed',
+        message: 'You may not have permission to delete this chat.',
+        type: 'error'
+      });
+      throw e;
+    }
+  };
+
+  const deleteCall = async (callId) => {
+    try {
+      await deleteDoc(doc(db, 'calls', callId));
+      setCallHistory(prev => prev.filter(c => c.id !== callId));
+      console.log(`[ChatContext] Call deleted: ${callId}`);
+    } catch (e) {
+      console.error('[ChatContext] Delete call failed:', e);
+      showPopup({
+        title: 'Error',
+        message: 'Failed to remove the call record.',
+        type: 'error'
+      });
+    }
+  };
+
+  const toggleStarMessage = async (chatId, messageId, currentlyStarred) => {
+    if (!currentUser) return;
+    try {
+      const msgRef = doc(db, 'chats', chatId, 'messages', messageId);
+      await updateDoc(msgRef, {
+        starredBy: currentlyStarred ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid)
+      });
+    } catch (e) {
+      console.error('[ChatContext] Toggle star failed:', e);
+    }
+  };
+
+  const forwardMessage = async (message, targetChatId) => {
+    if (!currentUser || !targetChatId) return;
+    try {
+      const forwardData = {
+        text: message.text || '',
+        mediaUrl: message.mediaUrl || null,
+        mediaType: message.mediaType || null,
+        fileName: message.fileName || null,
+        senderId: currentUser.uid,
+        senderName: currentUser.displayName || 'User',
+        senderAvatar: currentUser.photoURL || '',
+        timestamp: serverTimestamp(),
+        isForwarded: true,
+        starredBy: []
+      };
+
+      await addDoc(collection(db, 'chats', targetChatId, 'messages'), forwardData);
+      await updateDoc(doc(db, 'chats', targetChatId), {
+        lastMessage: message.mediaUrl ? (message.mediaType?.includes('image') ? '📷 Photo' : '📁 File') : message.text,
+        updatedAt: serverTimestamp()
+      });
+    } catch (e) {
+      console.error('[ChatContext] Forward failed:', e);
+      throw e;
+    }
+  };
+
+  const clearCallHistory = async () => {
+    if (!currentUser) return;
+    try {
+      const promises = callHistory.map(call => deleteDoc(doc(db, 'calls', call.id)));
+      await Promise.all(promises);
+      setCallHistory([]);
+      console.log(`[ChatContext] Call history cleared (${callHistory.length} items)`);
+      showPopup({
+        title: 'History Cleared',
+        message: 'Your call history has been wiped clean.',
+        type: 'info'
+      });
+    } catch (e) {
+      console.error('[ChatContext] Clear call history failed:', e);
+      showPopup({
+        title: 'Clear Failed',
+        message: 'Failed to clear some calls from history.',
+        type: 'error'
+      });
+    }
+  };
+
+  const showPopup = ({ title, message, type = 'info', onConfirm = null }) => {
+    setPopup({ show: true, title, message, type, onConfirm });
+  };
+
+  const closePopup = () => {
+    setPopup(prev => ({ ...prev, show: false }));
+  };
+
+  const value = useMemo(() => ({
+    currentUserProfile,
     users,
     chats,
     activeChat,
@@ -413,8 +729,29 @@ export const ChatProvider = ({ children }) => {
     startCall,
     acceptCall,
     endCall,
-    callHistory
-  };
+    callHistory,
+    statuses,
+    activeStatus,
+    setActiveStatus,
+    postStatus,
+    viewStatus,
+    deleteStatus,
+    deleteChat,
+    deleteCall,
+    clearCallHistory,
+    togglePinChat,
+    toggleMuteChat,
+    toggleStarMessage,
+    toggleBlockUser,
+    forwardMessage,
+    updateChatWallpaper,
+    popup,
+    showPopup,
+    closePopup
+  }), [
+    currentUserProfile, users, chats, activeChat, typingUsers, replyTo, loading, 
+    activeCall, callHistory, statuses, activeStatus, popup
+  ]);
 
   // Update document title with total unread count
   useEffect(() => {

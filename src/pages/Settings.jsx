@@ -4,11 +4,12 @@ import { FiArrowLeft, FiBell, FiMoon, FiLock, FiLogOut, FiUser, FiChevronRight }
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import BackgroundEffects from '../components/BackgroundEffects';
 
 const ToggleSwitch = ({ enabled, onChange, label, description, icon: Icon }) => (
   <div className="flex items-center justify-between p-4 rounded-xl hover:bg-bg-surface-hover transition-colors cursor-pointer" onClick={() => onChange(!enabled)}>
     <div className="flex items-center space-x-3">
-      <div className={`p-2 rounded-lg ${enabled ? 'bg-primary-500/20 text-primary-400' : 'bg-slate-800 text-slate-500'}`}>
+      <div className={`p-2 rounded-lg ${enabled ? 'bg-primary-500/20 text-primary-400' : 'bg-bg-surface text-text-muted'}`}>
         <Icon className="w-4 h-4" />
       </div>
       <div>
@@ -16,7 +17,7 @@ const ToggleSwitch = ({ enabled, onChange, label, description, icon: Icon }) => 
         {description && <p className="text-xs text-text-muted mt-0.5">{description}</p>}
       </div>
     </div>
-    <div className={`w-10 h-5 rounded-full transition-colors ${enabled ? 'bg-primary-500' : 'bg-slate-700'} relative`}>
+    <div className={`w-10 h-5 rounded-full transition-colors ${enabled ? 'bg-primary-500' : 'bg-bg-surface-hover/50 border border-glass-border'} relative`}>
       <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-all ${enabled ? 'left-5' : 'left-0.5'}`} />
     </div>
   </div>
@@ -39,9 +40,8 @@ const Settings = () => {
   };
 
   return (
-    <div className="h-[100dvh] w-full flex flex-col bg-bg-base overflow-hidden">
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-accent-600/10 blur-[120px]" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary-600/10 blur-[120px]" />
+    <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative">
+      <BackgroundEffects />
 
       {/* Header */}
       <div className="h-16 px-6 flex items-center space-x-4 bg-bg-surface/60 backdrop-blur-xl border-b border-glass-border z-10">
@@ -51,7 +51,8 @@ const Settings = () => {
         <h1 className="text-text-main font-semibold text-lg">Settings</h1>
       </div>
 
-      <div className="flex-1 max-w-2xl mx-auto w-full p-4 sm:p-6 z-10 space-y-4">
+      <div className="flex-1 overflow-y-auto scrollbar-custom p-4 sm:p-6 z-10">
+        <div className="max-w-2xl mx-auto space-y-4">
         {/* Profile Card */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           className="glass-card rounded-2xl p-4 flex items-center space-x-4 cursor-pointer hover:ring-1 hover:ring-primary-500/50 transition-all"
@@ -72,7 +73,7 @@ const Settings = () => {
         {/* Notifications */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl overflow-hidden">
           <div className="px-4 pt-4 pb-2">
-            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Notifications</h2>
+            <h2 className="text-xs font-semibold text-text-muted/60 uppercase tracking-wider">Notifications</h2>
           </div>
           <ToggleSwitch enabled={notifications} onChange={setNotifications} label="Push Notifications" description="Get notified when you receive messages" icon={FiBell} />
           <ToggleSwitch enabled={messagePreview} onChange={setMessagePreview} label="Message Preview" description="Show message content in notifications" icon={FiBell} />
@@ -119,7 +120,8 @@ const Settings = () => {
         </motion.div>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default Settings;

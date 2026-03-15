@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import PageTransition from './components/PageTransition';
 import BackgroundEffects from './components/BackgroundEffects';
 import CallOverlay from './components/CallOverlay';
+import ModernPopup from './components/ModernPopup';
 
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
@@ -14,8 +15,12 @@ const Settings = lazy(() => import('./pages/Settings'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 
 const LoadingSpinner = () => (
-  <div className="min-h-[100dvh] w-full flex items-center justify-center p-4 relative overflow-hidden">
-    <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+  <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 bg-bg-base relative overflow-hidden">
+    <div className="relative">
+      <div className="w-12 h-12 border-2 border-primary-500/20 rounded-full" />
+      <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-primary-500 rounded-full animate-spin shadow-[0_0_15px_rgba(59,130,246,0.3)]" />
+    </div>
+    <p className="mt-4 text-[10px] font-semibold tracking-widest text-text-main/40 animate-pulse">Loading secured experience...</p>
   </div>
 );
 
@@ -25,9 +30,10 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
-        <div className="h-[100dvh] w-full flex flex-col bg-bg-base overflow-hidden relative font-sans">
+        <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative font-sans">
           <BackgroundEffects />
           <CallOverlay />
+          <ModernPopup />
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               <Route path="/login" element={!currentUser ? <PageTransition><Login /></PageTransition> : <Navigate to="/" />} />
@@ -36,6 +42,7 @@ function App() {
               <Route path="/" element={currentUser ? <PageTransition><Dashboard /></PageTransition> : <Navigate to="/login" />} />
               <Route path="/profile" element={currentUser ? <PageTransition><Profile /></PageTransition> : <Navigate to="/login" />} />
               <Route path="/settings" element={currentUser ? <PageTransition><Settings /></PageTransition> : <Navigate to="/login" />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
         </div>

@@ -7,7 +7,7 @@ import { db, storage } from '../firebase/firebaseConfig';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
-import { auth } from '../firebase/firebaseConfig';
+import BackgroundEffects from '../components/BackgroundEffects';
 
 const Profile = () => {
   const { currentUser } = useAuth();
@@ -60,45 +60,44 @@ const Profile = () => {
   };
 
   return (
-    <div className="h-[100dvh] w-full flex flex-col bg-bg-base overflow-hidden">
-      {/* Background glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary-600/10 blur-[120px]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-accent-600/10 blur-[120px]" />
+    <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative">
+      <BackgroundEffects />
 
       {/* Header */}
-      <div className="h-16 px-6 flex items-center space-x-4 bg-slate-900/60 backdrop-blur-xl border-b border-white/5 z-10">
-        <button onClick={() => navigate('/')} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+      <div className="h-16 px-6 flex items-center space-x-4 bg-bg-surface/60 backdrop-blur-xl border-b border-glass-border z-10">
+        <button onClick={() => navigate('/')} className="p-2 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors">
           <FiArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-white font-semibold text-lg">Edit Profile</h1>
+        <h1 className="text-text-main font-semibold text-lg">Edit Profile</h1>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-0 sm:p-6 z-10">
+      <div className="flex-1 overflow-y-auto scrollbar-custom p-4 sm:p-6 z-10">
+        <div className="max-w-xl mx-auto py-4 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full sm:max-w-md glass-card sm:rounded-2xl p-6 sm:p-8 min-h-[calc(100vh-64px)] sm:min-h-0"
+          className="glass-card rounded-2xl p-6 sm:p-8"
         >
           {/* Avatar Section */}
           <div className="flex flex-col items-center mb-8">
             <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
               <img
-                src={avatarPreview || `https://ui-avatars.com/api/?name=${displayName}&background=4f46e5&color=fff`}
+                src={avatarPreview || `https://ui-avatars.com/api/?name=${displayName}&background=3b82f6&color=fff`}
                 alt="Avatar"
-                className="w-24 h-24 rounded-full object-cover border-4 border-slate-700 group-hover:border-primary-500 transition-colors shadow-xl"
+                className="w-24 h-24 rounded-full object-cover border-4 border-bg-surface group-hover:border-primary-500 transition-colors shadow-xl"
               />
               <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <FiCamera className="w-8 h-8 text-white" />
               </div>
             </div>
             <input type="file" accept="image/*" ref={avatarInputRef} onChange={handleAvatarChange} className="hidden" />
-            <p className="mt-2 text-xs text-slate-500">Click to change avatar</p>
+            <p className="mt-2 text-xs text-text-muted">Click to change avatar</p>
           </div>
 
           {/* Form Fields */}
           <div className="space-y-4">
             <div>
-              <label className="flex items-center space-x-2 text-sm font-medium text-slate-300 mb-1.5">
+              <label className="flex items-center space-x-2 text-sm font-medium text-text-muted mb-1.5">
                 <FiUser className="w-4 h-4 text-primary-400" />
                 <span>Display Name</span>
               </label>
@@ -106,11 +105,11 @@ const Profile = () => {
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-bg-surface/50 border border-glass-border text-text-main placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
               />
             </div>
             <div>
-              <label className="flex items-center space-x-2 text-sm font-medium text-slate-300 mb-1.5">
+              <label className="flex items-center space-x-2 text-sm font-medium text-text-muted mb-1.5">
                 <FiMail className="w-4 h-4 text-primary-400" />
                 <span>Email</span>
               </label>
@@ -118,11 +117,11 @@ const Profile = () => {
                 type="email"
                 value={currentUser?.email || ''}
                 disabled
-                className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-slate-500 cursor-not-allowed"
+                className="w-full px-4 py-3 rounded-xl bg-bg-surface/30 border border-glass-border/30 text-text-muted cursor-not-allowed"
               />
             </div>
             <div>
-              <label className="flex items-center space-x-2 text-sm font-medium text-slate-300 mb-1.5">
+              <label className="flex items-center space-x-2 text-sm font-medium text-text-muted mb-1.5">
                 <FiFileText className="w-4 h-4 text-primary-400" />
                 <span>Bio</span>
               </label>
@@ -131,19 +130,19 @@ const Profile = () => {
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Write something about yourself..."
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
+                className="w-full px-4 py-3 rounded-xl bg-bg-surface/50 border border-glass-border text-text-main placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Status</label>
+              <label className="block text-sm font-medium text-text-muted mb-1.5">Status</label>
               <input
                 type="text"
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 maxLength={80}
-                className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-slate-700/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-bg-surface/50 border border-glass-border text-text-main placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
               />
-              <p className="text-right text-xs text-slate-600 mt-1">{status.length}/80</p>
+              <p className="text-right text-[10px] text-text-muted mt-1 font-bold uppercase tracking-widest">{status.length}/80</p>
             </div>
           </div>
 
@@ -158,7 +157,8 @@ const Profile = () => {
         </motion.div>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default Profile;

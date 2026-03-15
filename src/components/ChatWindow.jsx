@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiPhone, FiVideo, FiInfo, FiChevronLeft } from 'react-icons/fi';
+import { FiPhone, FiVideo, FiInfo, FiChevronLeft, FiSearch, FiMoreVertical } from 'react-icons/fi';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 import TypingIndicator from './TypingIndicator';
+import ForwardModal from './ForwardModal';
 import { AnimatePresence, motion } from 'framer-motion';
+import { MessageSkeleton } from './Skeletons';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase/firebaseConfig';
@@ -20,6 +22,9 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import { isActuallyOnline, formatLastSeen } from '../utils/presence';
+
+// ... (helpers same as before)
+
 
 // ----- helpers -----
 const formatDateLabel = (timestamp) => {
@@ -50,12 +55,41 @@ const isSameSenderAndClose = (msg, prevMsg) => {
 // ----- component -----
 const ChatWindow = ({ activeChat, toggleInfo }) => {
   const [messages, setMessages] = useState([]);
+  const [loadingInitial, setLoadingInitial] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
-  const { sendMessage, typingUsers, setTyping, setActiveChat, startCall, users } = useChat();
+  const { sendMessage, typingUsers, setTyping, startCall, users, setActiveChat, toggleMuteChat, updateChatWallpaper, currentUserProfile } = useChat();
   const { currentUser } = useAuth();
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [showForwardModal, setShowForwardModal] = useState(false);
+  const [forwardingMessage, setForwardingMessage] = useState(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Sync with soft keyboard via VisualViewport
+  useEffect(() => {
+    if (!window.visualViewport) return;
+
+    const handleResize = () => {
+      const height = window.innerHeight - window.visualViewport.height;
+      setKeyboardHeight(height > 0 ? height : 0);
+      
+      // Force scroll to bottom when keyboard opens
+      if (height > 50) {
+        requestAnimationFrame(() => scrollToBottom('auto'));
+      }
+    };
+
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+    
+    return () => {
+      window.visualViewport.removeEventListener('resize', handleResize);
+      window.visualViewport.removeEventListener('scroll', handleResize);
+    };
+  }, []);
 
   // Find recipient object for robust online status
   const otherParticipant = activeChat.isGroup ? null : users.find(u => u.id === (activeChat.otherUserId || activeChat.id));
@@ -122,15 +156,16 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
       snapshot.forEach(doc => {
         msgs.push({ id: doc.id, ...doc.data() });
       });
-      // messages are desc in query, reverse for UI
       setMessages(msgs.reverse());
       setHasMore(snapshot.docs.length === PAGE_SIZE);
+      setLoadingInitial(false);
       
-      // Auto scroll if user is near bottom
+      // Auto scroll if user is near bottom or we just sent a message
       if (containerRef.current) {
         const { scrollHeight, scrollTop, clientHeight } = containerRef.current;
-        if (scrollHeight - scrollTop - clientHeight < 100) {
-          setTimeout(() => scrollToBottom('smooth'), 100);
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+        if (isNearBottom) {
+          requestAnimationFrame(() => scrollToBottom('smooth'));
         }
       }
     });
@@ -181,21 +216,22 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
   };
 
   const handleScroll = (e) => {
-    if (e.target.scrollTop === 0 && hasMore && !loadingMore) {
+    // Pre-fetching: Load more when user is 300px from top
+    if (e.target.scrollTop < 300 && hasMore && !loadingMore) {
       loadMoreMessages();
     }
   };
 
   useEffect(() => {
-    if (messages.length > 0 && messages.length <= PAGE_SIZE) {
-      scrollToBottom('auto');
+    if (!loadingInitial && messages.length > 0) {
+      requestAnimationFrame(() => scrollToBottom('auto'));
     }
-  }, [activeChat]);
+  }, [loadingInitial, activeChat]);
 
-  const handleSendMessage = async (text, file) => {
+  const handleSendMessage = async (text, file, replyData) => {
     if (!activeChat) return;
     try {
-      await sendMessage(activeChat.id, text, file);
+      await sendMessage(activeChat.id, text, file, replyData);
     } catch (error) {
       console.error('Failed to send', error);
     }
@@ -212,117 +248,250 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
     setTyping(activeChat.id, isTyping);
   };
 
-  return (
-    <div className="flex-1 flex flex-col h-full bg-bg-base relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.02] mix-blend-overlay pointer-events-none" />
+  const filteredMessages = searchQuery.trim() 
+    ? messages.filter(m => m.text?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : messages;
 
+  const userWallpaper = activeChat.wallpapers?.[currentUser?.uid];
+  const isBlocked = !activeChat.isGroup && (currentUserProfile?.blockedUsers?.includes(activeChat.otherUserId || activeChat.id) || users.find(u => u.id === (activeChat.otherUserId || activeChat.id))?.blockedUsers?.includes(currentUser?.uid));
+
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  return (
+    <div 
+      className="flex-1 flex flex-col h-full relative overflow-hidden"
+      style={{ paddingBottom: keyboardHeight > 0 ? `${keyboardHeight}px` : 0 }}
+    >
+      {/* Dynamic Chat Wallpaper */}
+      {userWallpaper && (
+        <div 
+          className="absolute inset-0 z-0 pointer-events-none transition-all duration-700"
+          style={{ 
+            backgroundImage: `url(${userWallpaper})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.15,
+            filter: 'brightness(0.7)'
+          }}
+        />
+      )}
       {/* Chat Header */}
-      <div className="h-16 px-2 sm:px-4 flex items-center justify-between bg-bg-surface/80 backdrop-blur-xl border-b border-glass-border z-20">
-        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-          <button
-            onClick={() => setActiveChat(null)}
-            aria-label="Back to chat list"
-            className="md:hidden p-2 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors -ml-2"
-          >
-            <FiChevronLeft className="w-6 h-6" />
-          </button>
-          <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer min-w-0" onClick={toggleInfo}>
-            <div className="relative flex-shrink-0">
-              <img src={activeChat.avatar} alt={activeChat.name} className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border border-white/5" />
-              {isRecipientOnline && <span className="absolute bottom-0 right-0 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-green-500 rounded-full border-2 border-slate-900" />}
+      <div className="relative z-30">
+        <div className="h-16 px-4 flex items-center justify-between bg-sidebar-premium border-b border-glass-border">
+          <div className="flex items-center space-x-3 min-w-0">
+            <button
+              onClick={() => setActiveChat(null)}
+              className="md:hidden p-2 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors -ml-2"
+            >
+              <FiChevronLeft className="w-6 h-6" />
+            </button>
+            <div className="flex items-center space-x-3 cursor-pointer min-w-0" onClick={toggleInfo}>
+              <div className="relative flex-shrink-0">
+                <img src={activeChat.avatar} alt={activeChat.name} className="w-10 h-10 rounded-full object-cover border border-white/5 shadow-lg" />
+                {isRecipientOnline && !isBlocked && <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-bg-surface shadow-glow" />}
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm text-text-main font-semibold truncate leading-none">{activeChat.name}</h2>
+                <p className="text-[10px] text-primary-500/70 font-medium mt-1">
+                  {isBlocked ? 'Status Unavailable' : (isTyping ? 'typing...' : (isRecipientOnline ? 'Online' : formatLastSeen(otherParticipant?.lastSeen)))}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-sm sm:text-base text-text-main font-medium truncate leading-tight">{activeChat.name || (activeChat.isGroup && 'Group Chat')}</h2>
-              <p className="text-[10px] sm:text-xs text-text-muted truncate leading-tight">
-                {isTyping
-                  ? <span className="text-primary-400 animate-pulse">typing…</span>
-                  : isRecipientOnline ? 'Online' : formatLastSeen(otherParticipant?.lastSeen)}
-              </p>
+          </div>
+
+          <div className="flex items-center space-x-1 sm:space-x-2 relative">
+            {!activeChat.isGroup && (
+              <>
+                <button 
+                  disabled={isBlocked}
+                  onClick={() => startCall(activeChat.otherUserId, activeChat.name, 'audio')} 
+                  className={`p-2.5 transition-colors active:scale-90 rounded-full ${isBlocked ? 'opacity-20 cursor-not-allowed' : 'text-text-muted hover:text-text-main hover:bg-white/10'}`}
+                >
+                  <FiPhone className="w-5 h-5 sm:w-[21px] sm:h-[21px]" />
+                </button>
+                <button 
+                  disabled={isBlocked}
+                  onClick={() => startCall(activeChat.otherUserId, activeChat.name, 'video')} 
+                  className={`p-2.5 transition-colors active:scale-90 rounded-full ${isBlocked ? 'opacity-20 cursor-not-allowed' : 'text-text-muted hover:text-text-main hover:bg-white/10'}`}
+                >
+                  <FiVideo className="w-5 h-5 sm:w-[21px] sm:h-[21px]" />
+                </button>
+                <div className="hidden sm:block w-px h-6 bg-glass-border mx-1" />
+              </>
+            )}
+            
+            {/* Desktop Search */}
+            <button 
+              onClick={() => { setIsSearchOpen(!isSearchOpen); if (isSearchOpen) setSearchQuery(''); }}
+              className={`hidden sm:flex p-2.5 rounded-full transition-colors active:scale-90 ${isSearchOpen ? 'text-primary-400 bg-primary-500/10' : 'text-text-muted hover:text-text-main hover:bg-white/10'}`}
+              title="Search"
+            >
+              <FiSearch className="w-5 h-5 sm:w-[21px] sm:h-[21px]" />
+            </button>
+            <button 
+              onClick={toggleInfo} 
+              className="hidden sm:flex p-2.5 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors active:scale-90"
+              title="Info"
+            >
+              <FiInfo className="w-5 h-5 sm:w-[21px] sm:h-[21px]" />
+            </button>
+
+            {/* Mobile More Menu */}
+            <div className="sm:hidden relative">
+              <button 
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                className={`p-2 rounded-full transition-colors ${showMoreMenu ? 'bg-white/10 text-primary-400' : 'text-text-muted'}`}
+              >
+                <FiMoreVertical className="w-5 h-5" />
+              </button>
+
+              <AnimatePresence>
+                {showMoreMenu && (
+                  <>
+                    <div className="fixed inset-0 z-[40]" onClick={() => setShowMoreMenu(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 top-full mt-2 w-48 bg-bg-surface/95 backdrop-blur-2xl border border-glass-border rounded-2xl shadow-2xl z-[50] overflow-hidden"
+                    >
+                      <button 
+                        onClick={() => { setIsSearchOpen(true); setShowMoreMenu(false); }}
+                        className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-text-main hover:bg-white/5 transition-colors"
+                      >
+                        <FiSearch className="w-4 h-4 text-text-muted" />
+                        <span>Search Messages</span>
+                      </button>
+                      <button 
+                        onClick={() => { toggleInfo(); setShowMoreMenu(false); }}
+                        className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-text-main hover:bg-white/5 transition-colors border-t border-glass-border/50"
+                      >
+                        <FiInfo className="w-4 h-4 text-text-muted" />
+                        <span>View Info</span>
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-1 flex-shrink-0">
-          {!activeChat.isGroup && (
-            <>
+        {/* Inline Search Bar */}
+        <AnimatePresence>
+          {isSearchOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="bg-bg-surface/40 backdrop-blur-xl border-b border-glass-border p-3"
+            >
+            <div className="flex items-center space-x-3">
+              <div className="relative flex-1">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted w-3.5 h-3.5" />
+                <input 
+                  type="text"
+                  placeholder="Search messages..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                  className="w-full bg-bg-base/30 border border-glass-border rounded-xl py-2 pl-9 pr-4 text-xs focus:outline-none focus:border-primary-500/30 transition-colors"
+                />
+              </div>
               <button 
-                onClick={() => startCall(activeChat.otherUserId, activeChat.name, 'audio')}
-                aria-label="Voice call" 
-                className="p-1.5 sm:p-2.5 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors"
+                onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
+                className="text-[10px] font-bold text-text-muted hover:text-text-main uppercase tracking-widest px-2 py-1 transition-colors"
               >
-                <FiPhone className="w-5 h-5" />
+                Close
               </button>
-              <button 
-                onClick={() => startCall(activeChat.otherUserId, activeChat.name, 'video')}
-                aria-label="Video call" 
-                className="p-1.5 sm:p-2.5 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors"
-              >
-                <FiVideo className="w-5 h-5" />
-              </button>
-              <div className="w-px h-6 bg-glass-border mx-1" />
-            </>
+            </div>
+            </motion.div>
           )}
-          <button onClick={toggleInfo} aria-label="Chat info" className="p-2.5 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors">
-            <FiInfo className="w-5 h-5" />
-          </button>
-        </div>
+        </AnimatePresence>
       </div>
 
       {/* Messages Area */}
-      <div 
-        ref={containerRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto scrollbar-custom px-2 sm:px-4 py-4 sm:py-6 flex flex-col space-y-1 relative z-10 min-h-0"
-      >
-        {loadingMore && (
-          <div className="flex justify-center p-2">
-            <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      {loadingInitial ? (
+        <MessageSkeleton />
+      ) : (
+        <div 
+          ref={containerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto scrollbar-custom px-4 py-6 flex flex-col space-y-1 relative z-10 min-h-0"
+          style={{ overscrollBehaviorY: 'contain' }}
+        >
+            {loadingMore && (
+              <div className="flex justify-center p-2">
+                <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            {filteredMessages.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-text-muted">
+                <div className="bg-primary-500/5 p-6 rounded-3xl backdrop-blur-md border border-primary-500/10 shadow-2xl flex flex-col items-center">
+                  <div className="w-16 h-16 bg-primary-500/10 rounded-full flex items-center justify-center mb-4 border border-primary-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+                     <span className="text-2xl text-primary-500 opacity-60">{searchQuery ? '🔍' : '🔒'}</span>
+                  </div>
+                  <p className="text-sm font-bold tracking-wide text-primary-500/80 uppercase">
+                    {searchQuery ? 'No Results Found' : 'Encrypted Conversation Started'}
+                  </p>
+                  <p className="text-[11px] opacity-40 mt-1">
+                    {searchQuery ? `Couldn't find any messages containing "${searchQuery}"` : 'Messages are secured with luxury-grade encryption'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              filteredMessages.map((msg, idx) => {
+                const prevMsg = filteredMessages[idx - 1];
+                const showDateSep = !isSameDay(msg.timestamp, prevMsg?.timestamp);
+                const isGrouped = !showDateSep && isSameSenderAndClose(msg, prevMsg);
+
+                return (
+                  <React.Fragment key={msg.id}>
+                    {showDateSep && msg.timestamp && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex justify-center my-4"
+                      >
+                        <span className="text-[11px] font-medium text-text-muted bg-bg-surface/60 border border-glass-border px-3 py-1 rounded-full backdrop-blur-sm shadow-sm">
+                          {formatDateLabel(msg.timestamp)}
+                        </span>
+                      </motion.div>
+                    )}
+                    <MessageBubble
+                      message={{ ...msg, time: formatMessageTime(msg.timestamp) }}
+                      isMe={msg.senderId === currentUser.uid}
+                      grouped={isGrouped}
+                      chatId={activeChat.id}
+                      onForward={(m) => {
+                        setForwardingMessage(m);
+                        setShowForwardModal(true);
+                      }}
+                    />
+                  </React.Fragment>
+                );
+              })
+            )}
+
+            <AnimatePresence>
+              {isTyping && <TypingIndicator users={typingNames} />}
+            </AnimatePresence>
+
+            <div ref={messagesEndRef} />
           </div>
         )}
-        {messages.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
-            <div className="bg-slate-800/50 p-4 rounded-2xl backdrop-blur-sm border border-slate-700/50">
-              Say hello to start the conversation! 👋
-            </div>
-          </div>
-        ) : (
-          messages.map((msg, idx) => {
-            const prevMsg = messages[idx - 1];
-            const showDateSep = !isSameDay(msg.timestamp, prevMsg?.timestamp);
-            const isGrouped = !showDateSep && isSameSenderAndClose(msg, prevMsg);
 
-            return (
-              <React.Fragment key={msg.id}>
-                {showDateSep && msg.timestamp && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex justify-center my-4"
-                  >
-                    <span className="text-[11px] font-medium text-slate-400 bg-slate-800/60 border border-slate-700/40 px-3 py-1 rounded-full backdrop-blur-sm">
-                      {formatDateLabel(msg.timestamp)}
-                    </span>
-                  </motion.div>
-                )}
-                <MessageBubble
-                  message={{ ...msg, time: formatMessageTime(msg.timestamp) }}
-                  isMe={msg.senderId === currentUser.uid}
-                  grouped={isGrouped}
-                  chatId={activeChat.id}
-                />
-              </React.Fragment>
-            );
-          })
-        )}
+        <MessageInput 
+          onSend={handleSendMessage} 
+          onTyping={handleTyping} 
+          isBlocked={isBlocked}
+        />
 
-        <AnimatePresence>
-          {isTyping && <TypingIndicator users={typingNames} />}
-        </AnimatePresence>
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      <MessageInput onSend={handleSendMessage} onTyping={handleTyping} />
+      <ForwardModal 
+        isOpen={showForwardModal}
+        onClose={() => setShowForwardModal(false)}
+        message={forwardingMessage || {}}
+      />
     </div>
   );
 };

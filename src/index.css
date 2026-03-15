@@ -1,20 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-50: #eef2ff;
-  --color-primary-100: #e0e7ff;
-  --color-primary-200: #c7d2fe;
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1; /* indigo-500 */
-  --color-primary-600: #4f46e5; /* indigo-600 */
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-primary-900: #312e81;
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6; /* Sapphire Blue */
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
 
-  --color-accent-500: #8b5cf6; /* violet-500 */
-  --color-accent-600: #7c3aed; /* violet-600 */
-  --color-accent-700: #6d28d9; /* violet-700 */
+  --color-accent-500: #4b1d3f; /* Royal Velvet Purple */
+  --color-accent-600: #3a1532;
+  --color-accent-700: #2a0f25;
 
   --color-bg-base: var(--bg-base);
   --color-bg-surface: var(--bg-surface);
@@ -28,75 +28,89 @@
 }
 
 :root {
-  --bg-base: #020617;
-  --bg-surface: #0f172a;
-  --bg-surface-hover: #1e293b;
-  --text-main: #e2e8f0;
+  --bg-base: #00040a; 
+  --bg-gradient: linear-gradient(135deg, #00040a 0%, #010c24 50%, #00040a 100%);
+  --bg-surface: #010c24;
+  --bg-surface-hover: #021a3d;
+  --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --glass-bg: rgba(15, 23, 42, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(1, 12, 36, 0.7);
+  --glass-border: rgba(59, 130, 246, 0.2);
+  --doodle-color: #3b82f6;
 }
 
 .light {
-  --bg-base: #f8fafc;
+  --bg-base: #fdfaf5; /* Soft Pearl/Champagne base */
   --bg-surface: #ffffff;
-  --bg-surface-hover: #f1f5f9;
-  --text-main: #1e293b;
+  --bg-surface-hover: #f9f5ed;
+  --text-main: #1a1a1a;
   --text-muted: #64748b;
   --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-border: rgba(197, 160, 33, 0.12);
+  --doodle-color: #1a1a1a; /* Dark in light mode */
 }
 
-/* Custom Utilities for Glassmorphism */
+/* Custom Utilities for Glassmorphism 2.0 */
 @layer utilities {
   .glass {
-    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-lg;
+    @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl;
   }
   
   .glass-dark {
-    @apply bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-xl;
+    @apply bg-black/40 backdrop-blur-2xl border border-primary-500/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
   }
   
   .glass-card {
-    @apply bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 shadow-[0_8px_32px_0_rgba(0,0,0,0.36)];
+    @apply bg-bg-surface/60 backdrop-blur-xl border border-primary-500/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-400 via-accent-500 to-purple-500;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-400 via-primary-500 to-accent-500;
   }
   
   .bg-gradient-primary {
-    @apply bg-gradient-to-r from-primary-600 via-accent-600 to-purple-700;
+    @apply bg-gradient-to-br from-primary-600 via-primary-500 to-accent-600;
   }
 
-  /* Custom Scrollbar */
+  /* Premium Scrollbar */
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
   .scrollbar-hide {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   .scrollbar-custom::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
   }
   .scrollbar-custom::-webkit-scrollbar-track {
-    background: transparent;
+    @apply bg-transparent;
   }
   .scrollbar-custom::-webkit-scrollbar-thumb {
-    @apply bg-slate-700 rounded-full;
+    @apply bg-primary-500/10 rounded-full transition-colors;
   }
   .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-600;
+    @apply bg-primary-500/40;
+  }
+
+  /* WhatsApp-style Doodles - High Fidelity */
+  .bg-doodles {
+    background-color: var(--doodle-color);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000' fill-rule='evenodd'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM10 0C8.895 0 8 .895 8 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm80 0c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zM9 10c0-1.105-.895-2-2-2s-2 .895-2 2 .895 2 2 2 2-.895 2-2zm80 0c0-1.105-.895-2-2-2s-2 .895-2 2 .895 2 2 2 2-.895 2-2zM20 80c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm60 0c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zM30 20c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm40 40c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zM40 20c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm40 40c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zM50 20c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm40 50c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zM60 20c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm40 60c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2z'/%3E%3C/g%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000' fill-rule='evenodd'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM10 0C8.895 0 8 .895 8 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm80 0c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zM9 10c0-1.105-.895-2-2-2s-2 .895-2 2 .895 2 2 2 2-.895 2-2zm80 0c0-1.105-.895-2-2-2s-2 .895-2 2 .895 2 2 2 2-.895 2-2zM20 80c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm60 0c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zM30 20c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm40 40c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zM40 20c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm40 40c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zM50 20c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm40 50c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zM60 20c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm40 60c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2z'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 80px 80px;
+    -webkit-mask-size: 80px 80px;
+    mask-size: 80px 80px;
   }
 }
 
 /* Global Styles */
 @layer base {
   html, body {
-    @apply h-[100dvh] w-full m-0 p-0 overflow-hidden bg-bg-base text-slate-200 font-sans antialiased selection:bg-primary-500/30;
+    @apply h-[100dvh] w-full m-0 p-0 overflow-hidden bg-bg-base text-text-main font-sans antialiased selection:bg-primary-500/20;
     overscroll-behavior: contain;
   }
   
@@ -104,8 +118,137 @@
     @apply h-[100dvh] w-full flex flex-col overflow-hidden;
   }
 
-  /* Smooth animations baseline */
-  * {
-    @apply transition-colors duration-200 ease-in-out;
+  /* Optimize transitions (Only for specific properties to avoid blinks) */
+  .transition-premium {
+    @apply transition-[background-color,border-color,opacity,transform,box-shadow] duration-200 ease-out;
   }
+
+  /* Prevent selection on touch-interactive elements */
+  .select-none {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Optimize touch targets */
+  .touch-none {
+    touch-action: none;
+  }
+}
+
+/* Emoji Picker Modern Glass Scrollbar Overrides */
+.EmojiPickerReact {
+  --epr-scrollbar-color: rgba(255, 255, 255, 0.1) !important;
+  --epr-scrollbar-hover-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.EmojiPickerReact .epr-body::-webkit-scrollbar {
+  width: 5px !important;
+}
+
+.EmojiPickerReact .epr-body::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.EmojiPickerReact .epr-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
+  backdrop-filter: blur(4px);
+}
+
+.EmojiPickerReact .epr-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Hide Category Labels scrollbar if any */
+.EmojiPickerReact .epr-category-nav::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Luxury Audio Slider */
+.luxury-slider::-webkit-slider-runnable-track {
+  -webkit-appearance: none;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+}
+
+.luxury-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  margin-top: -5px; /* Centers the thumb on the track */
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  border: 2px solid rgba(255,255,255,0.1);
+  transition: transform 0.2s ease;
+}
+
+.luxury-slider:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+
+/* Vibrant Luxury Sidebar Premium Background */
+.bg-sidebar-premium {
+  background: 
+    radial-gradient(circle at -10% -10%, rgba(59, 130, 246, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 110% 110%, rgba(75, 29, 63, 0.25) 0%, transparent 50%),
+    linear-gradient(165deg, rgba(0, 4, 10, 0.98) 0%, rgba(1, 12, 36, 0.96) 100%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.12'/%3E%3C/svg%3E");
+  background-blend-mode: screen, screen, normal, overlay;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  position: relative;
+  overflow: hidden;
+  border-right: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.bg-sidebar-premium::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(59, 130, 246, 0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+@keyframes sidebar-glimmer {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(0, 0) rotate(360deg); }
+}
+
+/* Luxury Welcome Premium Background */
+.bg-welcome-premium {
+  background: 
+    radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(75, 29, 63, 0.1) 0%, transparent 40%),
+    linear-gradient(135deg, #00040a 0%, #010c24 100%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.1'/%3E%3C/svg%3E");
+  background-blend-mode: screen, screen, normal, overlay;
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-welcome-premium::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(59, 130, 246, 0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.luxury-slider::-moz-range-thumb {
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.1);
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
 }
