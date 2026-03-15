@@ -25,6 +25,7 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const inputRef = useRef(null);
 
   const handleInputChange = (e) => {
     const val = e.target.value;
@@ -51,6 +52,11 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         onTyping(false);
       }
+      
+      // Force refocus to keep mobile keyboard open
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     }
   };
 
@@ -275,25 +281,29 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
         {!isRecording ? (
           <>
             <div className="flex space-x-0 sm:space-x-1 mb-1 sm:mb-1.5 items-center">
-              <button 
+              <motion.button 
                 type="button" 
                 disabled={isBlocked}
                 onClick={() => setShowEmoji(!showEmoji)}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
                 className={`p-1.5 sm:p-2 rounded-full transition-colors ${isBlocked ? 'opacity-20 cursor-not-allowed' : (showEmoji ? 'text-primary-400 bg-primary-500/10' : 'text-text-muted hover:text-text-main hover:bg-white/10')}`}
               >
                 <FiSmile className="w-5 h-5" />
-              </button>
+              </motion.button>
               
               <div className="relative" ref={attachMenuRef}>
-                <button 
+                <motion.button
                   type="button" 
-                  disabled={isBlocked || isLocating}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.9 }}
+                  disabled={isBlocked}
                   onClick={() => setShowAttachMenu(!showAttachMenu)}
-                  className={`p-1.5 sm:p-2 transition-colors rounded-full ${isBlocked || isLocating ? 'opacity-20 cursor-not-allowed' : (showAttachMenu ? 'text-primary-400 bg-primary-500/10' : 'text-text-muted hover:text-text-main hover:bg-white/10')}`}
-                  title="Attachments"
+                  className={`p-1.5 sm:p-2 transition-colors rounded-full ${isBlocked ? 'opacity-20 cursor-not-allowed' : 'text-text-muted hover:text-text-main hover:bg-white/10'}`}
+                  title="Attach"
                 >
                   <FiPaperclip className={`w-5 h-5 transition-transform duration-300 ${showAttachMenu ? 'rotate-45' : ''}`} />
-                </button>
+                </motion.button>
 
                 {ReactDOM.createPortal(
                   <AnimatePresence>
@@ -336,19 +346,22 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
                 )}
               </div>
 
-              <button 
+              <motion.button 
                 type="button" 
+                whileHover={{ scale: 1.15, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                whileTap={{ scale: 0.9 }}
                 disabled={isBlocked}
                 onClick={() => imageInputRef.current?.click()}
-                className={`p-1.5 sm:p-2 transition-colors rounded-full ${isBlocked ? 'opacity-20 cursor-not-allowed' : 'text-text-muted hover:text-text-main hover:bg-white/10'}`}
+                className={`p-1.5 sm:p-2 transition-colors rounded-full ${isBlocked ? 'opacity-20 cursor-not-allowed' : 'text-text-muted hover:text-text-main'}`}
                 title="Send Photo"
               >
                 <FiImage className="w-5 h-5" />
-              </button>
+              </motion.button>
             </div>
 
             <div className={`flex-1 min-w-0 bg-bg-surface/50 border border-glass-border rounded-2xl flex items-center shadow-inner transition-all ${isBlocked ? 'opacity-50' : 'focus-within:ring-1 focus-within:ring-primary-500 focus-within:border-primary-500/50'}`}>
               <textarea
+                ref={inputRef}
                 value={message}
                 disabled={isBlocked}
                 onChange={handleInputChange}
@@ -364,24 +377,40 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
               />
             </div>
 
-            {!message.trim() && !selectedFile ? (
-              <button
-                type="button"
-                disabled={isBlocked}
-                onClick={startRecording}
-                className={`p-3 mb-0.5 rounded-full bg-bg-surface border border-glass-border text-primary-400 transition-colors shadow-lg active:scale-95 flex-shrink-0 ${isBlocked ? 'opacity-20 cursor-not-allowed' : 'hover:text-primary-300 hover:bg-white/10'}`}
-                title="Voice Message"
-              >
-                <FiMic className="w-5 h-5" />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className="p-3 mb-0.5 rounded-full bg-primary-600 text-white hover:bg-primary-500 transition-colors shadow-lg shadow-primary-500/20 active:scale-95 flex-shrink-0"
-              >
-                <FiSend className="w-5 h-5 ml-0.5" />
-              </button>
-            )}
+            <AnimatePresence mode="wait">
+              {!message.trim() && !selectedFile ? (
+                <motion.button
+                  key="mic-btn"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.15 }}
+                  type="button"
+                  disabled={isBlocked}
+                  onClick={startRecording}
+                  whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                  whileTap={{ scale: 0.9 }}
+                  className={`p-3 mb-0.5 rounded-full bg-bg-surface border border-glass-border text-primary-400 transition-colors shadow-lg flex-shrink-0 ${isBlocked ? 'opacity-20 cursor-not-allowed' : 'hover:text-primary-300'}`}
+                  title="Voice Message"
+                >
+                  <FiMic className="w-5 h-5" />
+                </motion.button>
+              ) : (
+                <motion.button
+                  key="send-btn"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.15 }}
+                  type="submit"
+                  whileHover={{ scale: 1.1, backgroundColor: '#3b82f6' }}
+                  whileTap={{ scale: 0.9 }}
+                  className="p-3 mb-0.5 rounded-full bg-primary-600 text-white hover:bg-primary-500 transition-colors shadow-lg shadow-primary-500/20 flex-shrink-0"
+                >
+                  <FiSend className="w-5 h-5 ml-0.5" />
+                </motion.button>
+              )}
+            </AnimatePresence>
           </>
         ) : (
           <div className="flex-1 flex items-center justify-between bg-primary-500/10 border border-primary-500/30 rounded-2xl px-4 py-2 animate-pulse">

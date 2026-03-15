@@ -312,12 +312,14 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
       <div className="relative z-[60]">
         <div className="h-16 px-4 flex items-center justify-between bg-sidebar-premium border-b border-glass-border">
           <div className="flex items-center space-x-3 min-w-0">
-            <button
+            <motion.button
               onClick={() => setActiveChat(null)}
-              className="md:hidden p-2 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors -ml-2"
+              whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.05)' }}
+              whileTap={{ scale: 0.9 }}
+              className="md:hidden p-2 text-text-muted hover:text-text-main rounded-full transition-colors -ml-2"
             >
               <FiChevronLeft className="w-6 h-6" />
-            </button>
+            </motion.button>
             <div className="flex items-center space-x-3 cursor-pointer min-w-0" onClick={toggleInfo}>
               <div className="relative flex-shrink-0">
                 <img src={activeChat.avatar} alt={activeChat.name} className="w-10 h-10 rounded-full object-cover border border-white/5 shadow-lg" />
@@ -335,48 +337,58 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
           <div className="flex items-center space-x-1 sm:space-x-2 relative">
             {!activeChat.isGroup && (
               <>
-                <button 
+                <motion.button 
                   disabled={isBlocked}
+                  whileHover={!isBlocked ? { scale: 1.1, backgroundColor: 'rgba(255,255,255,0.05)' } : {}}
+                  whileTap={!isBlocked ? { scale: 0.9 } : {}}
                   onClick={() => startCall(activeChat.otherUserId, activeChat.name, 'audio')} 
-                  className={`p-2.5 transition-colors active:scale-90 rounded-full ${isBlocked ? 'opacity-20 cursor-not-allowed' : 'text-text-muted hover:text-text-main hover:bg-white/10'}`}
+                  className={`p-2.5 transition-colors rounded-full ${isBlocked ? 'opacity-20 cursor-not-allowed' : 'text-text-muted hover:text-text-main'}`}
                 >
                   <FiPhone className="w-5 h-5 sm:w-[21px] sm:h-[21px]" />
-                </button>
-                <button 
+                </motion.button>
+                <motion.button 
                   disabled={isBlocked}
+                  whileHover={!isBlocked ? { scale: 1.1, backgroundColor: 'rgba(255,255,255,0.05)' } : {}}
+                  whileTap={!isBlocked ? { scale: 0.9 } : {}}
                   onClick={() => startCall(activeChat.otherUserId, activeChat.name, 'video')} 
-                  className={`p-2.5 transition-colors active:scale-90 rounded-full ${isBlocked ? 'opacity-20 cursor-not-allowed' : 'text-text-muted hover:text-text-main hover:bg-white/10'}`}
+                  className={`p-2.5 transition-colors rounded-full ${isBlocked ? 'opacity-20 cursor-not-allowed' : 'text-text-muted hover:text-text-main'}`}
                 >
                   <FiVideo className="w-5 h-5 sm:w-[21px] sm:h-[21px]" />
-                </button>
+                </motion.button>
                 <div className="hidden sm:block w-px h-6 bg-glass-border mx-1" />
               </>
             )}
             
             {/* Desktop Search */}
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.05)' }}
+              whileTap={{ scale: 0.9 }}
               onClick={() => { setIsSearchOpen(!isSearchOpen); if (isSearchOpen) setSearchQuery(''); }}
-              className={`hidden sm:flex p-2.5 rounded-full transition-colors active:scale-90 ${isSearchOpen ? 'text-primary-400 bg-primary-500/10' : 'text-text-muted hover:text-text-main hover:bg-white/10'}`}
+              className={`hidden sm:flex p-2.5 rounded-full transition-colors ${isSearchOpen ? 'text-primary-400 bg-primary-500/10' : 'text-text-muted hover:text-text-main'}`}
               title="Search"
             >
               <FiSearch className="w-5 h-5 sm:w-[21px] sm:h-[21px]" />
-            </button>
-            <button 
+            </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.05)' }}
+              whileTap={{ scale: 0.9 }}
               onClick={toggleInfo} 
-              className="hidden sm:flex p-2.5 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors active:scale-90"
+              className="hidden sm:flex p-2.5 text-text-muted hover:text-text-main rounded-full transition-colors"
               title="Info"
             >
               <FiInfo className="w-5 h-5 sm:w-[21px] sm:h-[21px]" />
-            </button>
+            </motion.button>
 
             {/* Mobile More Menu Trigger Only */}
             <div className="sm:hidden relative">
-              <button 
+              <motion.button 
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
                 className={`p-2 rounded-full transition-colors ${showMoreMenu ? 'bg-white/10 text-primary-400' : 'text-text-muted'}`}
               >
                 <FiMoreVertical className="w-5 h-5" />
-              </button>
+              </motion.button>
             </div>
           </div>
         </div>

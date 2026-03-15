@@ -273,8 +273,8 @@ const MessageBubble = ({ message, isMe, grouped = false, chatId, onForward }) =>
   return (
     <motion.div
       id={`msg-${message.id}`}
-      initial={{ opacity: 0, y: 8, scale: 0.99 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={{ opacity: 0, scale: 0.98, y: 5 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
       className={`flex flex-col max-w-[90%] md:max-w-[75%] lg:max-w-[550px] ${grouped ? 'mb-0.5' : 'mb-2'} ${isMe ? 'self-end items-end' : 'self-start items-start'}`}
     >
@@ -474,7 +474,7 @@ const MessageBubble = ({ message, isMe, grouped = false, chatId, onForward }) =>
 
               if (isAudio) {
                 return (
-                  <div className={`mb-2 p-2.5 rounded-2xl flex items-center ${isMe ? 'bg-white/10' : 'bg-bg-base/40 border border-glass-border'} min-w-[240px] sm:min-w-[300px] shadow-sm`}>
+                  <div className={`mb-2 p-2.5 rounded-2xl flex items-center ${isMe ? 'bg-white/10' : 'bg-bg-base/40 border border-glass-border'} w-[280px] sm:w-[340px] max-w-full shadow-sm`}>
                     <AudioPlayer src={message.mediaUrl} isMe={isMe} />
                   </div>
                 );
@@ -528,23 +528,22 @@ const MessageBubble = ({ message, isMe, grouped = false, chatId, onForward }) =>
                   href={message.text} 
                   target="_blank" 
                   rel="noreferrer"
-                  className="block relative rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 w-full sm:w-64 border border-white/10 group"
+                  className="block relative rounded-xl overflow-hidden cursor-pointer shadow-md hover:shadow-lg transition-all duration-300 w-[160px] sm:w-[200px] flex-shrink-0 border border-white/10 group bg-[#0f172a]"
                 >
-                  <div className="absolute inset-0 bg-black/60 z-10" />
-                  <div className="h-32 w-full bg-[#1e293b] relative grid" style={{
-                    backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)',
-                    backgroundSize: '16px 16px'
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300 z-10" />
+                  <div className="h-24 sm:h-28 w-full relative grid" style={{
+                    backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, rgba(255,255,255,0.1) 1px, transparent 0)',
+                    backgroundSize: '12px 12px'
                   }}>
                     <div className="absolute inset-0 flex items-center justify-center z-20">
                       <div className="relative">
-                        <FiMapPin className="w-10 h-10 text-red-500 drop-shadow-md relative z-10" />
+                        <FiMapPin className="w-7 h-7 text-red-500 drop-shadow-lg relative z-10 transition-transform duration-300 group-hover:scale-110" />
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-red-500/30 animate-ping" />
                       </div>
                     </div>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent z-20">
-                    <p className="text-sm font-semibold text-white truncate">Shared Location</p>
-                    <p className="text-xs text-white/70">Click to open in Maps</p>
+                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent z-20">
+                    <p className="text-[10px] font-bold text-white text-center tracking-tight">Location</p>
                   </div>
                 </a>
               ) : (
