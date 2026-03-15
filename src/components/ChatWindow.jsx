@@ -19,6 +19,7 @@ import {
   doc,
   writeBatch
 } from 'firebase/firestore';
+import { isActuallyOnline, formatLastSeen } from '../utils/presence';
 
 // ----- helpers -----
 const formatDateLabel = (timestamp) => {
@@ -53,8 +54,12 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
   const [hasMore, setHasMore] = useState(true);
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
-  const { sendMessage, typingUsers, setTyping, setActiveChat, startCall } = useChat();
+  const { sendMessage, typingUsers, setTyping, setActiveChat, startCall, users } = useChat();
   const { currentUser } = useAuth();
+
+  // Find recipient object for robust online status
+  const otherParticipant = activeChat.isGroup ? null : users.find(u => u.id === (activeChat.otherUserId || activeChat.id));
+  const isRecipientOnline = activeChat.isGroup ? false : isActuallyOnline(otherParticipant);
 
   const currentTypingInChat = Object.values(typingUsers).filter(
     t => t.chatId === activeChat?.id
@@ -224,14 +229,14 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
           <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer min-w-0" onClick={toggleInfo}>
             <div className="relative flex-shrink-0">
               <img src={activeChat.avatar} alt={activeChat.name} className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border border-white/5" />
-              {activeChat.online && <span className="absolute bottom-0 right-0 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-green-500 rounded-full border-2 border-slate-900" />}
+              {isRecipientOnline && <span className="absolute bottom-0 right-0 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-green-500 rounded-full border-2 border-slate-900" />}
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="text-sm sm:text-base text-text-main font-medium truncate leading-tight">{activeChat.name || (activeChat.isGroup && 'Group Chat')}</h2>
               <p className="text-[10px] sm:text-xs text-text-muted truncate leading-tight">
                 {isTyping
                   ? <span className="text-primary-400 animate-pulse">typing…</span>
-                  : activeChat.online ? 'Online' : 'Active'}
+                  : isRecipientOnline ? 'Online' : formatLastSeen(otherParticipant?.lastSeen)}
               </p>
             </div>
           </div>

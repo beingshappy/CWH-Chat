@@ -96,11 +96,12 @@
 /* Global Styles */
 @layer base {
   html, body {
-    @apply h-full w-full m-0 p-0 overflow-hidden bg-bg-base text-slate-200 font-sans antialiased selection:bg-primary-500/30;
+    @apply h-[100dvh] w-full m-0 p-0 overflow-hidden bg-bg-base text-slate-200 font-sans antialiased selection:bg-primary-500/30;
+    overscroll-behavior: contain;
   }
   
   #root {
-    @apply h-full w-full flex flex-col;
+    @apply h-[100dvh] w-full flex flex-col overflow-hidden;
   }
 
   /* Smooth animations baseline */

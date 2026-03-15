@@ -39,7 +39,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bg-base flex flex-col relative overflow-hidden">
+    <div className="h-[100dvh] w-full flex flex-col bg-bg-base overflow-hidden">
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-accent-600/10 blur-[120px]" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary-600/10 blur-[120px]" />
 

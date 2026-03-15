@@ -14,7 +14,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 
 const LoadingSpinner = () => (
-  <div className="h-screen w-full flex items-center justify-center bg-bg-base">
+  <div className="min-h-[100dvh] w-full flex items-center justify-center p-4 relative overflow-hidden">
     <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
   </div>
 );
@@ -25,7 +25,7 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
-        <div className="h-full w-full bg-bg-base text-text-main overflow-hidden relative font-sans">
+        <div className="h-[100dvh] w-full flex flex-col bg-bg-base overflow-hidden relative font-sans">
           <BackgroundEffects />
           <CallOverlay />
           <Suspense fallback={<LoadingSpinner />}>

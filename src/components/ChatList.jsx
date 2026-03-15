@@ -2,6 +2,7 @@ import React from 'react';
 import ChatItem from './ChatItem';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
+import { isActuallyOnline, formatLastSeen } from '../utils/presence';
 
 const ChatList = ({ activeTab, searchQuery, filteredUsers }) => {
   const { chats, activeChat, setActiveChat, startDirectMessage, users, loading, syncProfile } = useChat();
@@ -16,7 +17,7 @@ const ChatList = ({ activeTab, searchQuery, filteredUsers }) => {
       ...chat,
       name: chat.name || other?.name || 'Unknown',
       avatar: chat.avatar || other?.avatar || `https://ui-avatars.com/api/?name=User&background=4f46e5&color=fff`,
-      online: other?.online || false,
+      online: isActuallyOnline(other),
       unread: chat.unreadCount?.[currentUser?.uid] || 0,
       otherUserId: otherUid, // Crucial for calling
     };
@@ -68,8 +69,8 @@ const ChatList = ({ activeTab, searchQuery, filteredUsers }) => {
                 id: user.id,
                 name: user.name,
                 avatar: user.avatar,
-                online: user.online,
-                lastMessage: user.status,
+                online: isActuallyOnline(user),
+                lastMessage: isActuallyOnline(user) ? (user.status || 'Hey there!') : formatLastSeen(user.lastSeen),
                 updatedAt: user.lastSeen
               }}
               onClick={() => handleUserClick(user)}

@@ -104,11 +104,29 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    // Heartbeat logic holder
+    let heartbeatInterval = null;
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       setLoading(false);
       
+      // Clear any existing heartbeat
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+
       if (user) {
+        // Start Heartbeat
+        heartbeatInterval = setInterval(async () => {
+          try {
+            await updateDoc(doc(db, 'users', user.uid), {
+              lastSeen: serverTimestamp(),
+              online: true
+            });
+          } catch (e) {
+            console.warn('[Heartbeat] Failed:', e);
+          }
+        }, 30000); // 30 seconds
+
         // Update online status and sync profile info
         try {
           const userDoc = {
@@ -147,17 +165,20 @@ export const AuthProvider = ({ children }) => {
       }
     });
 
-    // Mark offline on unload
+    // Mark offline on unload (Best effort)
     const handleUnload = () => {
       if (auth.currentUser) {
-        const { doc, updateDoc, serverTimestamp } = require('firebase/firestore');
-        updateDoc(doc(db, 'users', auth.currentUser.uid), { online: false, lastSeen: serverTimestamp() }).catch(() => {});
+        setDoc(doc(db, 'users', auth.currentUser.uid), { 
+          online: false, 
+          lastSeen: serverTimestamp() 
+        }, { merge: true }).catch(() => {});
       }
     };
     window.addEventListener('beforeunload', handleUnload);
 
     return () => {
       unsubscribe();
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
       window.removeEventListener('beforeunload', handleUnload);
     };
   }, []);

@@ -6,6 +6,7 @@ import { doc, updateDoc, arrayRemove, deleteDoc, arrayUnion, query, collection, 
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../context/ChatContext';
 import UserAvatar from './UserAvatar';
+import { isActuallyOnline } from '../utils/presence';
 
 const InfoPanel = ({ activeChat, close }) => {
   const { currentUser } = useAuth();
@@ -119,10 +120,10 @@ const InfoPanel = ({ activeChat, close }) => {
       <div className="flex-1 overflow-y-auto scrollbar-custom">
         {/* Profile Card */}
         <div className="flex flex-col items-center justify-center py-8 border-b border-glass-border px-4 text-center">
-          <UserAvatar src={activeChat.avatar} name={activeChat.name} size="xl" online={activeChat.online} />
+          <UserAvatar src={activeChat.avatar} name={activeChat.name} size="xl" online={isActuallyOnline(isGroup ? null : users.find(u => u.id === (activeChat.otherUserId || activeChat.id)))} />
           <h3 className="text-xl font-semibold text-text-main mt-4 mb-1">{activeChat.name}</h3>
           <p className="text-sm text-text-muted">
-            {isGroup ? `${activeChat.members.length} members` : activeChat.online ? 'Online' : 'Offline'}
+            {isGroup ? `${activeChat.members.length} members` : isActuallyOnline(users.find(u => u.id === (activeChat.otherUserId || activeChat.id))) ? 'Online' : formatLastSeen(users.find(u => u.id === (activeChat.otherUserId || activeChat.id))?.lastSeen)}
           </p>
           {isGroup && activeChat.description && (
             <p className="mt-3 text-sm text-text-muted leading-relaxed italic">
@@ -192,7 +193,7 @@ const InfoPanel = ({ activeChat, close }) => {
               {chatMembers.map(member => (
                 <div key={member.id} className="flex items-center justify-between px-4 py-2 hover:bg-bg-surface-hover transition-colors group">
                     <div className="flex items-center space-x-3">
-                        <UserAvatar src={member.avatar} name={member.name} size="xs" online={member.online} />
+                        <UserAvatar src={member.avatar} name={member.name} size="xs" online={isActuallyOnline(member)} />
                         <div className="min-w-0">
                             <p className="text-sm font-medium text-text-main truncate pr-4">
                                 {member.id === currentUser.uid ? 'You' : member.name}

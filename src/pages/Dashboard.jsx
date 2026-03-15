@@ -11,7 +11,7 @@ const Dashboard = () => {
   const { activeChat } = useChat();
 
   return (
-    <div className="h-screen w-full flex bg-bg-base overflow-hidden relative">
+    <div className="h-[100dvh] w-full flex bg-bg-base overflow-hidden relative">
       {/* Global Background Effects */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-600/10 rounded-full blur-[128px]" />
