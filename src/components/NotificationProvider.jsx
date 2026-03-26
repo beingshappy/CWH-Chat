@@ -165,17 +165,17 @@ export const NotificationProvider = ({ children }) => {
     prevCallIdRef.current = activeCall.id;
 
     // OS Notification (with avatar support via icon field)
-    if ('Notification' in window && Notification.permission === 'granted') {
-      try {
-        const n = new Notification(`Incoming ${activeCall.type} call`, {
+    if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification(`Incoming ${activeCall.type} call`, {
           body: `${activeCall.callerName} is calling you...`,
           icon: activeCall.callerPhoto || '/icon-192x192.png',
           badge: '/icon-192x192.png',
           tag: 'call_' + activeCall.id,
           requireInteraction: true,
+          data: { url: window.location.origin }
         });
-        n.onclick = () => { window.focus(); n.close(); };
-      } catch (e) {}
+      });
     }
 
     // In-app toast
@@ -207,15 +207,16 @@ export const NotificationProvider = ({ children }) => {
 
         // OS Notification
         if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
-          try {
-            const n = new Notification(`New message from ${chat.name || 'Someone'}`, {
+          navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(`New message from ${chat.name || 'Someone'}`, {
               body: chat.lastMessage || 'You have a new message',
               icon: chat.photo || '/icon-192x192.png',
               badge: '/icon-192x192.png',
               tag: `chat_${chat.id}`,
+              vibrate: [100, 50, 100],
+              data: { url: window.location.origin }
             });
-            n.onclick = () => { window.focus(); n.close(); };
-          } catch (e) {}
+          });
         }
 
         // In-app toast (always show when different chat is active)

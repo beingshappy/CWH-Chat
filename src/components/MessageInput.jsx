@@ -5,7 +5,7 @@ import EmojiPicker from 'emoji-picker-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChat } from '../context/ChatContext';
 
-const MessageInput = ({ onSend, onTyping, isBlocked }) => {
+const MessageInput = ({ onSend, onTyping, isBlocked, onFocus }) => {
   const [message, setMessage] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -359,6 +359,7 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
                 ref={inputRef}
                 value={message}
                 disabled={isBlocked}
+                onFocus={onFocus}
                 onChange={handleInputChange}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {

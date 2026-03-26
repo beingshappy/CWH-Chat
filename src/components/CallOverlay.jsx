@@ -89,73 +89,73 @@ const CallOverlay = () => {
     const isCaller = activeCall.callerId === currentUser?.uid;
 
     return (
-        <AnimatePresence>
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9999] bg-black/90 md:bg-bg-base/90 md:backdrop-blur-xl flex flex-col items-center justify-center p-4"
-            >
-                {/* 1. Ringing State (Outgoing/Incoming) */}
-                {activeCall.status === 'ringing' && (
-                    <div className="text-center space-y-8 max-w-sm w-full bg-bg-surface/50 p-10 rounded-3xl border border-glass-border shadow-2xl">
-                        <div className="relative mx-auto w-32 h-32">
-                           <motion.div 
-                                animate={{ scale: [1, 1.2, 1] }} 
-                                transition={{ repeat: Infinity, duration: 2 }}
-                                className="absolute inset-0 bg-primary-500/20 rounded-full" 
-                           />
-                           <div className="relative bg-bg-surface rounded-full w-full h-full flex items-center justify-center text-4xl border-2 border-primary-500/30 overflow-hidden shadow-inner">
-                             {activeCall.callerPhoto ? <img src={activeCall.callerPhoto} className="w-full h-full object-cover" /> : '👤'}
-                           </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <h2 className="text-2xl font-bold text-white">
-                                {isCaller ? `Calling ${activeCall.receiverName}...` : `Incoming ${activeCall.type} Call`}
-                            </h2>
-                            {!isCaller && <p className="text-text-muted font-medium">{activeCall.callerName} is calling you</p>}
-                        </div>
-
-                        <div className="flex items-center justify-center space-x-6">
-                            {/* Decline/End Button */}
-                            <button 
-                                onClick={endCall}
-                                className="p-5 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg hover:scale-110 transition-all active:scale-95"
-                            >
-                                <FiX className="w-8 h-8" />
-                            </button>
-
-                            {/* Accept Button (Only for Receiver) */}
-                            {!isCaller && (
-                                <button 
-                                    onClick={acceptCall}
-                                    className="p-5 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg hover:scale-110 transition-all active:scale-95 animate-bounce"
-                                >
-                                    {activeCall.type === 'video' ? <FiVideo className="w-8 h-8" /> : <FiPhone className="w-8 h-8" />}
-                                </button>
-                            )}
-                        </div>
+        <motion.div
+            key="call-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[9999] bg-black/90 md:bg-bg-base/90 md:backdrop-blur-xl flex flex-col items-center justify-center p-4"
+        >
+            {/* 1. Ringing State (Outgoing/Incoming) */}
+            {activeCall.status === 'ringing' && (
+                <div className="text-center space-y-8 max-w-sm w-full bg-bg-surface/50 p-10 rounded-3xl border border-glass-border shadow-2xl">
+                    <div className="relative mx-auto w-32 h-32">
+                       <motion.div
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ repeat: Infinity, duration: 2 }}
+                            className="absolute inset-0 bg-primary-500/20 rounded-full"
+                       />
+                       <div className="relative bg-bg-surface rounded-full w-full h-full flex items-center justify-center text-4xl border-2 border-primary-500/30 overflow-hidden shadow-inner">
+                         {activeCall.callerPhoto ? <img src={activeCall.callerPhoto} className="w-full h-full object-cover" /> : '👤'}
+                       </div>
                     </div>
-                )}
 
-                {/* 2. Active Call State (ZegoCloud Container) */}
-                <div 
-                    ref={videoContainerRef}
-                    className={`w-full h-full transition-opacity duration-500 ${activeCall.status === 'active' ? 'opacity-100' : 'opacity-0 pointer-events-none absolute'}`}
-                />
-                
-                {activeCall.status === 'active' && (
-                     <button 
-                        onClick={endCall}
-                        className="absolute bottom-10 left-1/2 -translate-x-1/2 p-4 rounded-full bg-red-500/30 hover:bg-red-500 backdrop-blur-md text-white border border-red-500/50 z-20 transition-all"
-                        title="End Call"
-                     >
-                         <FiX className="w-6 h-6" />
-                     </button>
-                )}
-            </motion.div>
-        </AnimatePresence>
+                    <div className="space-y-2">
+                        <h2 className="text-2xl font-bold text-white">
+                            {isCaller ? `Calling ${activeCall.receiverName}...` : `Incoming ${activeCall.type} Call`}
+                        </h2>
+                        {!isCaller && <p className="text-text-muted font-medium">{activeCall.callerName} is calling you</p>}
+                    </div>
+
+                    <div className="flex items-center justify-center space-x-6">
+                        {/* Decline/End Button */}
+                        <button
+                            onClick={endCall}
+                            className="p-5 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg hover:scale-110 transition-all active:scale-95"
+                        >
+                            <FiX className="w-8 h-8" />
+                        </button>
+
+                        {/* Accept Button (Only for Receiver) */}
+                        {!isCaller && (
+                            <button
+                                onClick={acceptCall}
+                                className="p-5 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg hover:scale-110 transition-all active:scale-95 animate-bounce"
+                            >
+                                {activeCall.type === 'video' ? <FiVideo className="w-8 h-8" /> : <FiPhone className="w-8 h-8" />}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* 2. Active Call State (ZegoCloud Container) */}
+            <div
+                ref={videoContainerRef}
+                className={`w-full h-full transition-opacity duration-500 ${activeCall.status === 'active' ? 'opacity-100' : 'opacity-0 pointer-events-none absolute'}`}
+            />
+
+            {activeCall.status === 'active' && (
+                 <button
+                    onClick={endCall}
+                    className="absolute bottom-10 left-1/2 -translate-x-1/2 p-4 rounded-full bg-red-500/30 hover:bg-red-500 backdrop-blur-md text-white border border-red-500/50 z-20 transition-all"
+                    title="End Call"
+                 >
+                     <FiX className="w-6 h-6" />
+                 </button>
+            )}
+        </motion.div>
     );
 };
 

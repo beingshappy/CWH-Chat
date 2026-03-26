@@ -72,25 +72,34 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
   useEffect(() => {
     if (!window.visualViewport) return;
 
-    const handleResize = () => {
-      const height = window.innerHeight - window.visualViewport.height;
-      setKeyboardHeight(height > 0 ? height : 0);
+    const handleViewportChange = () => {
+      // Find the "gap" where the keyboard is overlapping (usually for iOS/Overlay widgets)
+      const heightGap = window.innerHeight - window.visualViewport.height;
+      setKeyboardHeight(heightGap > 0 ? heightGap : 0);
       
-      // Force scroll to bottom when keyboard opens
-      // Use setTimeout to ensure React has painted the new paddingBottom into the DOM FIRST!
-      if (height > 50) {
-        setTimeout(() => scrollToBottom('auto'), 100);
+      // If the viewport shrunk significantly, it's a keyboard opening
+      if (window.visualViewport.height < window.innerHeight * 0.85) {
+        // Double-tap scroll to ensure we get to the bottom even during slow keyboard slide-ups
+        setTimeout(() => scrollToBottom('auto'), 50);
+        setTimeout(() => scrollToBottom('auto'), 250);
       }
     };
 
-    window.visualViewport.addEventListener('resize', handleResize);
-    window.visualViewport.addEventListener('scroll', handleResize);
+    window.visualViewport.addEventListener('resize', handleViewportChange);
+    window.visualViewport.addEventListener('scroll', handleViewportChange);
     
     return () => {
-      window.visualViewport.removeEventListener('resize', handleResize);
-      window.visualViewport.removeEventListener('scroll', handleResize);
+      window.visualViewport.removeEventListener('resize', handleViewportChange);
+      window.visualViewport.removeEventListener('scroll', handleViewportChange);
     };
   }, []);
+
+  const handleInputFocus = () => {
+    // Specifically for mobile: when they tap the box, start scrolling down 
+    // immediately to "meet" the rising keyboard.
+    setTimeout(() => scrollToBottom('smooth'), 100);
+    setTimeout(() => scrollToBottom('auto'), 400); // Failsafe for slow transitions
+  };
 
   // Find recipient object for robust online status
   const otherParticipant = activeChat.isGroup ? null : users.find(u => u.id === (activeChat.otherUserId || activeChat.id));
@@ -501,6 +510,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
         <MessageInput 
           onSend={handleSendMessage} 
           onTyping={handleTyping} 
+          onFocus={handleInputFocus}
           isBlocked={isBlocked}
         />
 

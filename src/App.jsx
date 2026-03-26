@@ -56,7 +56,9 @@ function App() {
         <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative font-sans">
           <BackgroundEffects />
           <NotificationProvider>
-            <CallOverlay />
+            <AnimatePresence>
+              <CallOverlay />
+            </AnimatePresence>
             <ModernPopup />
             <Suspense fallback={<LoadingSpinner />}>
               <AnimatedRoutes />
