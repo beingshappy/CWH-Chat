@@ -2,16 +2,12 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiCheck, FiImage, FiType, FiSend, FiLoader } from 'react-icons/fi';
 import { useChat } from '../context/ChatContext';
+import { useToast } from '../context/ToastContext';
 
 const StatusCreator = ({ onClose }) => {
+  const { postStatus } = useChat();
+  const { showToast } = useToast();
   const [type, setType] = useState('text'); // 'text' or 'media'
-  const [textContent, setTextContent] = useState('');
-  const [bgColor, setBgColor] = useState('bg-gradient-to-br from-indigo-600 to-purple-700');
-  const [mediaFile, setMediaFile] = useState(null);
-  const [mediaPreview, setMediaPreview] = useState(null);
-  const [caption, setCaption] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { postStatus, showPopup } = useChat();
 
   const colors = [
     'bg-gradient-to-br from-indigo-600 to-purple-700',
@@ -59,11 +55,7 @@ const StatusCreator = ({ onClose }) => {
       onClose();
     } catch (error) {
       console.error('Failed to post status:', error);
-      showPopup({
-        title: 'Upload Failed',
-        message: 'Failed to post your status update. Please check your connection and try again.',
-        type: 'error'
-      });
+      showToast('Upload Failed', 'Failed to post your status update. Please check your connection.', 'error');
     } finally {
       setLoading(false);
     }

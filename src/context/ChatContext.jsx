@@ -22,6 +22,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 
 const ChatContext = createContext();
 
@@ -29,6 +30,7 @@ export const useChat = () => useContext(ChatContext);
 
 export const ChatProvider = ({ children }) => {
   const { currentUser } = useAuth();
+  const { showToast } = useToast();
   const [currentUserProfile, setCurrentUserProfile] = useState(null);
   const [users, setUsers] = useState([]);
   const [chats, setChats] = useState([]);
@@ -915,10 +917,11 @@ export const ChatProvider = ({ children }) => {
     updateChatWallpaper,
     popup,
     showPopup,
+    showToast,
     closePopup
   }), [
     currentUserProfile, users, chats, activeChat, typingUsers, replyTo, loading, 
-    activeCall, callHistory, statuses, activeStatus, popup
+    activeCall, callHistory, statuses, activeStatus, popup, showToast
   ]);
 
   // Update document title with total unread count

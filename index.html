@@ -50,14 +50,9 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // Register main service worker
-          navigator.serviceWorker.register('/service-worker.js')
-            .then(() => console.log('[SW] Main service worker registered'))
-            .catch(err => console.warn('[SW] service-worker.js failed:', err));
-          // Register Firebase Messaging service worker
           navigator.serviceWorker.register('/firebase-messaging-sw.js')
-            .then(() => console.log('[SW] Firebase messaging SW registered'))
-            .catch(err => console.warn('[SW] firebase-messaging-sw.js failed:', err));
+            .then(reg => console.log('[SW] Registered:', reg.scope))
+            .catch(err => console.error('[SW] Registration failed:', err));
         });
       }
     </script>

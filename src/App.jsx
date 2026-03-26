@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import PageTransition from './components/PageTransition';
@@ -49,6 +49,28 @@ const LoadingSpinner = () => (
 
 function App() {
   const { currentUser } = useAuth();
+
+  // Resume AudioContext on first interaction to allow notification sounds
+  useEffect(() => {
+    const resumeAudio = () => {
+      if (typeof window !== 'undefined') {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') {
+          ctx.resume().then(() => {
+            console.log('[Audio] Context resumed successfully');
+            window.removeEventListener('click', resumeAudio);
+            window.removeEventListener('touchstart', resumeAudio);
+          });
+        }
+      }
+    };
+    window.addEventListener('click', resumeAudio);
+    window.addEventListener('touchstart', resumeAudio);
+    return () => {
+      window.removeEventListener('click', resumeAudio);
+      window.removeEventListener('touchstart', resumeAudio);
+    };
+  }, []);
 
   return (
     <ThemeProvider>

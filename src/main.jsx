@@ -4,13 +4,16 @@ import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext'
 import { ChatProvider } from './context/ChatContext'
+import { ToastProvider } from './context/ToastContext'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
-      <ChatProvider>
-        <App />
-      </ChatProvider>
+      <ToastProvider>
+        <ChatProvider>
+          <App />
+        </ChatProvider>
+      </ToastProvider>
     </AuthProvider>
   </StrictMode>,
 )

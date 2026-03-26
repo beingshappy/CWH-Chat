@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiSearch, FiSend, FiArrowRight } from 'react-icons/fi';
 import { useChat } from '../context/ChatContext';
+import { useToast } from '../context/ToastContext';
 import UserAvatar from './UserAvatar';
 
 const ForwardModal = ({ message, isOpen, onClose }) => {
-  const { chats, forwardMessage, showPopup } = useChat();
+  const { chats, forwardMessage } = useChat();
+  const { showToast } = useToast();
   const [search, setSearch] = useState('');
   const [sendingId, setSendingId] = useState(null);
 
@@ -20,11 +22,7 @@ const ForwardModal = ({ message, isOpen, onClose }) => {
     try {
       await forwardMessage(message, chatId);
       onClose();
-      showPopup({
-        title: 'Message Forwarded',
-        message: 'The message has been shared successfully.',
-        type: 'info'
-      });
+      showToast('Message Forwarded', 'Shared successfully', 'success');
     } catch (e) {
         console.error('Forward failed:', e);
     } finally {
