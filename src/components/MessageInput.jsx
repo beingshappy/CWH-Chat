@@ -52,11 +52,6 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         onTyping(false);
       }
-      
-      // Force refocus to keep mobile keyboard open
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 0);
     }
   };
 
@@ -403,6 +398,8 @@ const MessageInput = ({ onSend, onTyping, isBlocked }) => {
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.15 }}
                   type="submit"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onTouchStart={(e) => e.preventDefault()}
                   whileHover={{ scale: 1.1, backgroundColor: '#3b82f6' }}
                   whileTap={{ scale: 0.9 }}
                   className="p-3 mb-0.5 rounded-full bg-primary-600 text-white hover:bg-primary-500 transition-colors shadow-lg shadow-primary-500/20 flex-shrink-0"

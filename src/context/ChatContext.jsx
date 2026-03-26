@@ -17,7 +17,8 @@ import {
   limit,
   arrayUnion,
   arrayRemove,
-  Timestamp
+  Timestamp,
+  increment
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useAuth } from './AuthContext';
@@ -428,6 +429,16 @@ export const ChatProvider = ({ children }) => {
         hiddenBy: [] // Resurrection: Clear hiddenBy when new message arrives
       };
 
+      // Find the chat to get its members
+      const targetChat = chats.find(c => c.id === chatId) || activeChat;
+      if (targetChat && targetChat.members) {
+        targetChat.members.forEach(memberId => {
+          if (memberId !== currentUser.uid) {
+            updates[`unreadCount.${memberId}`] = increment(1);
+          }
+        });
+      }
+
       await updateDoc(chatRef, updates);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -730,11 +741,23 @@ export const ChatProvider = ({ children }) => {
       };
 
       await addDoc(collection(db, 'chats', targetChatId, 'messages'), forwardData);
-      await updateDoc(doc(db, 'chats', targetChatId), {
+      
+      const targetChat = chats.find(c => c.id === targetChatId) || activeChat;
+      const updates = {
         lastMessage: message.mediaUrl ? (message.mediaType?.includes('image') ? '📷 Photo' : '📁 File') : message.text,
         updatedAt: serverTimestamp(),
         hiddenBy: [] // Resurrect on forward
-      });
+      };
+
+      if (targetChat && targetChat.members) {
+        targetChat.members.forEach(memberId => {
+          if (memberId !== currentUser.uid) {
+            updates[`unreadCount.${memberId}`] = increment(1);
+          }
+        });
+      }
+
+      await updateDoc(doc(db, 'chats', targetChatId), updates);
     } catch (e) {
       console.error('[ChatContext] Forward failed:', e);
       throw e;
