@@ -3,22 +3,31 @@ import { motion } from 'framer-motion';
 import { FiCamera, FiArrowLeft, FiSave, FiUser, FiMail, FiFileText } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useChat } from '../context/ChatContext';
 import { db, storage } from '../firebase/firebaseConfig';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
 const Profile = () => {
   const { currentUser } = useAuth();
+  const { currentUserProfile } = useChat();
   const navigate = useNavigate();
   const avatarInputRef = useRef(null);
 
   const [displayName, setDisplayName] = useState(currentUser?.displayName || '');
-  const [status, setStatus] = useState('Hey there! I am using CWH Chat.');
-  const [bio, setBio] = useState('');
+  const [status, setStatus] = useState(currentUserProfile?.status || 'Hey there! I am using CWH Chat.');
+  const [bio, setBio] = useState(currentUserProfile?.bio || '');
   const [avatarPreview, setAvatarPreview] = useState(currentUser?.photoURL || null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  React.useEffect(() => {
+    if (currentUserProfile) {
+      if (currentUserProfile.status) setStatus(currentUserProfile.status);
+      if (currentUserProfile.bio) setBio(currentUserProfile.bio);
+    }
+  }, [currentUserProfile]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];

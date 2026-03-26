@@ -77,8 +77,9 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
       setKeyboardHeight(height > 0 ? height : 0);
       
       // Force scroll to bottom when keyboard opens
+      // Use setTimeout to ensure React has painted the new paddingBottom into the DOM FIRST!
       if (height > 50) {
-        requestAnimationFrame(() => scrollToBottom('auto'));
+        setTimeout(() => scrollToBottom('auto'), 100);
       }
     };
 
@@ -154,7 +155,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = [];
       snapshot.forEach(doc => {
-        msgs.push({ id: doc.id, ...doc.data() });
+        msgs.push({ id: doc.id, ...doc.data({ serverTimestamps: 'estimate' }) });
       });
       setMessages(msgs.reverse());
       setHasMore(snapshot.docs.length === PAGE_SIZE);
@@ -165,7 +166,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
         const { scrollHeight, scrollTop, clientHeight } = containerRef.current;
         const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
         if (isNearBottom) {
-          requestAnimationFrame(() => scrollToBottom('smooth'));
+          setTimeout(() => scrollToBottom('smooth'), 50);
         }
       }
     });
@@ -196,7 +197,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
     const snapshot = await getDocs(q);
     const oldMsgs = [];
     snapshot.forEach(doc => {
-      oldMsgs.push({ id: doc.id, ...doc.data() });
+      oldMsgs.push({ id: doc.id, ...doc.data({ serverTimestamps: 'estimate' }) });
     });
 
     if (oldMsgs.length > 0) {
@@ -224,7 +225,7 @@ const ChatWindow = ({ activeChat, toggleInfo }) => {
 
   useEffect(() => {
     if (!loadingInitial && messages.length > 0) {
-      requestAnimationFrame(() => scrollToBottom('auto'));
+      setTimeout(() => scrollToBottom('auto'), 50);
     }
   }, [loadingInitial, activeChat]);
 

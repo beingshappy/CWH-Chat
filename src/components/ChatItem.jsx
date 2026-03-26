@@ -166,8 +166,9 @@ const ChatItemMemo = ({ chat, active, onClick, isGlobalDirectory = false }) => {
               </span>
             )}
             
-            {/* Context Actions visible on hover (Desktop Only) */}
-            <div className="hidden md:flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100 translate-x-1 group-hover:translate-x-0">
+            {/* Context Actions visible on hover (Desktop Only)
+                Made absolute so they don't break the layout of the unread badge on the right side! */}
+            <div className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100 translate-x-2 group-hover:translate-x-0 bg-bg-surface/90 backdrop-blur-md p-1 rounded-xl shadow-[0_0_15px_5px_rgba(0,0,0,0.5)] z-10 border border-white/5 pointer-events-none group-hover:pointer-events-auto">
               <button 
                 onClick={handleTogglePin}
                 className={`p-1.5 rounded-lg transition-colors ${isPinned ? 'text-primary-400 bg-primary-500/10' : 'text-text-muted hover:text-text-main hover:bg-white/5'}`}

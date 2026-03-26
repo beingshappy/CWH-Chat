@@ -28,14 +28,14 @@
 }
 
 :root {
-  --bg-base: #00040a; 
-  --bg-gradient: linear-gradient(135deg, #00040a 0%, #010c24 50%, #00040a 100%);
-  --bg-surface: #010c24;
-  --bg-surface-hover: #021a3d;
+  --bg-base: #0b0f19; 
+  --bg-gradient: linear-gradient(145deg, #0f172a 0%, #0b0f19 100%);
+  --bg-surface: rgba(30, 41, 59, 0.5);
+  --bg-surface-hover: rgba(51, 65, 85, 0.6);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --glass-bg: rgba(1, 12, 36, 0.7);
-  --glass-border: rgba(59, 130, 246, 0.2);
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08); /* Sleek, minimal border */
   --doodle-color: #3b82f6;
 }
 
@@ -94,33 +94,37 @@
     scrollbar-width: none;
   }
 
-  .scrollbar-custom::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  .scrollbar-custom::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  .scrollbar-custom::-webkit-scrollbar-thumb {
-    @apply bg-primary-500/20 rounded-full transition-colors;
-  }
-  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary-500/50;
+  /* Premium Auto-Hide Scrollbar for Desktop */
+  @media (pointer: fine) {
+    .scrollbar-custom {
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+      transition: scrollbar-color 0.3s ease;
+    }
+    .scrollbar-custom:hover {
+      scrollbar-color: rgba(59, 130, 246, 0.4) transparent;
+    }
+
+    .scrollbar-custom::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .scrollbar-custom::-webkit-scrollbar-track {
+      @apply bg-transparent;
+    }
+    .scrollbar-custom::-webkit-scrollbar-thumb {
+      background-color: transparent; /* Hidden by default */
+      border-radius: 9999px;
+    }
+    .scrollbar-custom:hover::-webkit-scrollbar-thumb {
+      @apply bg-primary-500/40; /* Visible on container hover */
+    }
+    .scrollbar-custom:hover::-webkit-scrollbar-thumb:hover {
+      @apply bg-primary-500/80;
+    }
   }
 
-  .scrollbar-custom::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-  .scrollbar-custom::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  .scrollbar-custom::-webkit-scrollbar-thumb {
-    @apply bg-primary-500/40 rounded-full transition-colors;
-  }
-  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary-500/80;
-  }
+
 
   /* WhatsApp-style Doodles - High Fidelity */
   .bg-doodles {
@@ -137,7 +141,8 @@
 /* Global Styles */
 @layer base {
   html, body {
-    @apply h-[100dvh] w-full m-0 p-0 overflow-hidden bg-bg-base text-text-main font-sans antialiased selection:bg-primary-500/20;
+    @apply h-[100dvh] w-full m-0 p-0 overflow-hidden text-text-main font-sans antialiased selection:bg-primary-500/20;
+    background: var(--bg-gradient);
     overscroll-behavior: contain;
     user-select: none;
     -webkit-user-select: none;
@@ -222,20 +227,19 @@
 
 /* Vibrant Luxury Sidebar Premium Background */
 .bg-sidebar-premium {
-  background: 
-    linear-gradient(165deg, rgba(0, 4, 10, 0.98) 0%, rgba(1, 12, 36, 0.96) 100%);
+  background: linear-gradient(180deg, #0b0f19 0%, #0f172a 100%);
   position: relative;
   overflow: hidden;
-  border-right: 1px solid rgba(59, 130, 246, 0.15);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 @media (min-width: 768px) {
   .bg-sidebar-premium {
     background: 
-      radial-gradient(circle at -10% -10%, rgba(59, 130, 246, 0.25) 0%, transparent 50%),
-      radial-gradient(circle at 110% 110%, rgba(75, 29, 63, 0.25) 0%, transparent 50%),
-      linear-gradient(165deg, rgba(0, 4, 10, 0.98) 0%, rgba(1, 12, 36, 0.96) 100%),
-      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.12'/%3E%3C/svg%3E");
+      radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.12), transparent 60%),
+      radial-gradient(ellipse at bottom right, rgba(99, 102, 241, 0.12), transparent 60%),
+      linear-gradient(180deg, rgba(11, 15, 25, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
     background-blend-mode: screen, screen, normal, overlay;
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
@@ -260,7 +264,7 @@
 
 /* Luxury Welcome Premium Background */
 .bg-welcome-premium {
-  background: linear-gradient(135deg, #00040a 0%, #010c24 100%);
+  background: linear-gradient(135deg, #0b0f19 0%, #0f172a 100%);
   position: relative;
   overflow: hidden;
 }
@@ -268,10 +272,10 @@
 @media (min-width: 768px) {
   .bg-welcome-premium {
     background: 
-      radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.1) 0%, transparent 40%),
-      radial-gradient(circle at 90% 90%, rgba(75, 29, 63, 0.1) 0%, transparent 40%),
-      linear-gradient(135deg, #00040a 0%, #010c24 100%),
-      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.1'/%3E%3C/svg%3E");
+      radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+      linear-gradient(135deg, rgba(11, 15, 25, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
     background-blend-mode: screen, screen, normal, overlay;
   }
 }

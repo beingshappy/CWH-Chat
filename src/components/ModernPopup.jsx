@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiAlertCircle, FiCheckCircle, FiInfo, FiHelpCircle, FiX, FiMapPin } from 'react-icons/fi';
+import { FiAlertCircle, FiCheckCircle, FiInfo, FiHelpCircle, FiMapPin } from 'react-icons/fi';
 import { useChat } from '../context/ChatContext';
 
 const ModernPopup = () => {
@@ -8,16 +8,16 @@ const ModernPopup = () => {
 
     if (!popup.show) return null;
 
-    const getIcon = () => {
-        switch (popup.type) {
-            case 'success': return <FiCheckCircle className="w-12 h-12 text-green-400" />;
-            case 'error': return <FiAlertCircle className="w-12 h-12 text-red-500" />;
-            case 'confirm': return <FiHelpCircle className="w-12 h-12 text-orange-400" />;
-            case 'location': return <FiMapPin className="w-12 h-12 text-red-500" />;
-            case 'destructive': return <FiAlertCircle className="w-12 h-12 text-red-500" />;
-            default: return <FiInfo className="w-12 h-12 text-blue-400" />;
-        }
+    const config = {
+        success:     { icon: FiCheckCircle,  color: 'text-emerald-400', accent: 'border-emerald-500/20',  confirm: 'bg-emerald-600 hover:bg-emerald-500' },
+        error:       { icon: FiAlertCircle,  color: 'text-red-400',     accent: 'border-red-500/20',      confirm: 'bg-red-600 hover:bg-red-500'       },
+        destructive: { icon: FiAlertCircle,  color: 'text-red-400',     accent: 'border-red-500/20',      confirm: 'bg-red-600 hover:bg-red-500'       },
+        confirm:     { icon: FiHelpCircle,   color: 'text-amber-400',   accent: 'border-amber-500/20',    confirm: 'bg-amber-600 hover:bg-amber-500'   },
+        location:    { icon: FiMapPin,       color: 'text-red-400',     accent: 'border-red-500/20',      confirm: 'bg-red-600 hover:bg-red-500'       },
+        info:        { icon: FiInfo,         color: 'text-blue-400',    accent: 'border-blue-500/20',     confirm: 'bg-blue-600 hover:bg-blue-500'     },
     };
+    const c = config[popup.type] || config.info;
+    const Icon = c.icon;
 
     const handleConfirm = () => {
         if (popup.onConfirm) popup.onConfirm();
@@ -27,79 +27,59 @@ const ModernPopup = () => {
     return (
         <AnimatePresence>
             {popup.show && (
-                <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
                     {/* Backdrop */}
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={closePopup}
-                        className="absolute inset-0 bg-black/80 md:bg-black/60 md:backdrop-blur-md"
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                     />
 
-                    {/* Modal */}
+                    {/* Compact Dialog */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                        initial={{ opacity: 0, scale: 0.92, y: 8 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.98, y: 10 }}
-                        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                        className="relative w-full max-w-sm glass-card rounded-3xl p-8 border border-white/10 shadow-2xl flex flex-col items-center text-center overflow-hidden"
+                        exit={{ opacity: 0, scale: 0.92, y: 8 }}
+                        transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+                        className={`relative w-full max-w-xs bg-bg-surface/95 backdrop-blur-xl rounded-2xl border ${c.accent} shadow-2xl shadow-black/40 overflow-hidden`}
                     >
-                        {/* Decorative background element */}
-                        <div className={`absolute -top-24 -right-24 w-48 h-48 rounded-full blur-3xl pointer-events-none ${
-                            ['error', 'location', 'destructive'].includes(popup.type) ? 'bg-red-500/20' : 
-                            popup.type === 'confirm' ? 'bg-orange-500/20' : 
-                            popup.type === 'success' ? 'bg-green-500/20' : 
-                            'bg-primary-500/20'
-                        }`} />
-                        
-                        <div className="mb-6 p-4 rounded-full bg-white/5 border border-white/5">
-                            {getIcon()}
+                        <div className="p-5">
+                            {/* Icon + Title inline */}
+                            <div className="flex items-center space-x-3 mb-2">
+                                <Icon className={`w-5 h-5 flex-shrink-0 ${c.color}`} />
+                                <h3 className="text-sm font-bold text-text-main leading-tight">{popup.title}</h3>
+                            </div>
+                            <p className="text-xs text-text-muted leading-relaxed pl-8">{popup.message}</p>
                         </div>
 
-                        <h3 className="text-xl font-bold text-text-main mb-3">{popup.title}</h3>
-                        <p className="text-sm text-text-muted mb-8 leading-relaxed">
-                            {popup.message}
-                        </p>
-
-                        <div className="flex w-full space-x-3">
+                        {/* Actions */}
+                        <div className={`px-5 pb-4 flex space-x-2 ${popup.type !== 'confirm' ? 'justify-end' : ''}`}>
                             {popup.type === 'confirm' ? (
                                 <>
-                                    <button 
+                                    <button
                                         onClick={closePopup}
-                                        className="flex-1 py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-text-main font-semibold transition-all border border-white/5 active:scale-95"
+                                        className="flex-1 py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-text-muted text-xs font-semibold transition-all border border-white/5 active:scale-95"
                                     >
                                         Cancel
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={handleConfirm}
-                                        className={`flex-1 py-3 px-4 rounded-xl text-white font-semibold transition-all active:scale-95 shadow-lg ${
-                                            ['destructive', 'error'].includes(popup.type) 
-                                                ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 shadow-red-500/20' 
-                                                : popup.type === 'confirm'
-                                                    ? 'bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 shadow-orange-500/20'
-                                                    : 'bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-500 hover:to-primary-600 shadow-primary-500/20'
-                                        }`}
+                                        className={`flex-1 py-2 px-3 rounded-xl text-white text-xs font-semibold transition-all active:scale-95 ${c.confirm}`}
                                     >
                                         Confirm
                                     </button>
                                 </>
                             ) : (
-                                <button 
+                                <button
                                     onClick={closePopup}
-                                    className="w-full py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-text-main font-semibold transition-all border border-white/10 active:scale-95"
+                                    className="py-2 px-4 rounded-xl bg-white/8 hover:bg-white/15 text-text-main text-xs font-semibold transition-all border border-white/8 active:scale-95"
                                 >
                                     Got it
                                 </button>
                             )}
                         </div>
-
-                        <button 
-                            onClick={closePopup}
-                            className="absolute top-4 right-4 p-2 text-text-muted hover:text-text-main rounded-full hover:bg-white/5 transition-colors"
-                        >
-                            <FiX className="w-5 h-5" />
-                        </button>
                     </motion.div>
                 </div>
             )}

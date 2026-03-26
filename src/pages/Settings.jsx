@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiArrowLeft, FiBell, FiMoon, FiLock, FiLogOut, FiUser, FiChevronRight } from 'react-icons/fi';
+import { FiArrowLeft, FiBell, FiLock, FiLogOut, FiUser, FiChevronRight } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 
 const ToggleSwitch = ({ enabled, onChange, label, description, icon: Icon }) => (
   <div className="flex items-center justify-between p-4 rounded-xl hover:bg-bg-surface-hover transition-colors cursor-pointer" onClick={() => onChange(!enabled)}>
@@ -24,7 +23,6 @@ const ToggleSwitch = ({ enabled, onChange, label, description, icon: Icon }) => 
 
 const Settings = () => {
   const { currentUser, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState(true);
   const [messagePreview, setMessagePreview] = useState(true);
@@ -77,13 +75,6 @@ const Settings = () => {
           <ToggleSwitch enabled={messagePreview} onChange={setMessagePreview} label="Message Preview" description="Show message content in notifications" icon={FiBell} />
         </motion.div>
 
-        {/* Appearance */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card rounded-2xl overflow-hidden">
-          <div className="px-4 pt-4 pb-2">
-            <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Appearance</h2>
-          </div>
-          <ToggleSwitch enabled={theme === 'dark'} onChange={toggleTheme} label="Dark Mode" description="Use dark theme across the app" icon={FiMoon} />
-        </motion.div>
 
         {/* Privacy */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-2xl overflow-hidden">

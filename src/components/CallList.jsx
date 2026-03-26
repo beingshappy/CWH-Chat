@@ -72,8 +72,8 @@ const CallList = () => {
               key={call.id}
               className="group flex items-center justify-between p-3 rounded-xl hover:bg-bg-surface-hover transition-all border border-transparent hover:border-glass-border cursor-pointer relative"
             >
-              <div className="flex items-center space-x-3 min-w-0 pr-12">
-                <div className="relative">
+              <div className="flex items-center space-x-3 min-w-0 pr-2">
+                <div className="relative flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-bg-surface flex items-center justify-center text-lg border border-glass-border overflow-hidden">
                     {otherPhoto ? (
                         <img src={otherPhoto} className="w-full h-full object-cover" alt={otherName} />
@@ -101,7 +101,7 @@ const CallList = () => {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all">
+              <div className="flex items-center space-x-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all flex-shrink-0">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

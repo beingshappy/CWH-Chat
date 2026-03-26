@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiSearch, FiSettings, FiLogOut, FiUsers, FiMessageSquare, FiCircle, FiPhone } from 'react-icons/fi';
+import { FiSearch, FiSettings, FiLogOut, FiUsers, FiMessageSquare, FiCircle, FiPhone, FiBell } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import ChatList from './ChatList';
@@ -18,6 +18,17 @@ const Sidebar = () => {
   const { currentUser, logout } = useAuth();
   const { users, chats, activeStatus, setActiveStatus, setActiveChat, currentUserProfile } = useChat();
   const navigate = useNavigate();
+
+  const [notifPermission, setNotifPermission] = useState('Notification' in window ? Notification.permission : 'denied');
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) return;
+    try {
+      const perm = await Notification.requestPermission();
+      setNotifPermission(perm);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleLogout = async () => {
     try { 
@@ -55,43 +66,48 @@ const Sidebar = () => {
       <div className="w-full h-full flex flex-col bg-sidebar-premium z-20 relative transition-all duration-300 min-h-0">
         {/* Header */}
         <div className="h-16 px-4 flex items-center justify-between bg-bg-surface md:bg-bg-surface/60 md:backdrop-blur-2xl border-b border-glass-border flex-shrink-0">
-          <div
-            className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group min-w-0"
-            onClick={() => navigate('/profile')}
-          >
-            <div className="relative flex-shrink-0">
+          <div className="flex items-center cursor-default min-w-0">
+            <h1 className="text-xl sm:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary-400 via-primary-300 to-primary-500 tracking-tight select-none">
+              CWH Chat
+            </h1>
+          </div>
+
+          <div className="flex items-center space-x-0.5 sm:space-x-1 flex-shrink-0">
+            {notifPermission === 'default' && (
+              <button
+                onClick={requestNotificationPermission}
+                title="Enable Notifications"
+                className="p-2 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-full transition-colors animate-pulse"
+              >
+                <FiBell className="w-5 h-5 sm:w-[22px] sm:h-[22px]" />
+              </button>
+            )}
+            <button
+               onClick={() => setShowGroupModal(true)}
+               title="Create Group"
+               className="p-2 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors"
+            >
+               <FiUsers className="w-5 h-5 sm:w-[22px] sm:h-[22px]" />
+            </button>
+            <button
+               onClick={() => navigate('/settings')}
+               title="Settings"
+               className="p-2 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors"
+            >
+               <FiSettings className="w-5 h-5 sm:w-[22px] sm:h-[22px]" />
+            </button>
+            <div
+              className="relative cursor-pointer hover:scale-105 transition-transform ml-1 sm:ml-2"
+              onClick={() => navigate('/profile')}
+              title="My Profile"
+            >
               <img
                 src={currentUser?.photoURL || 'https://i.pravatar.cc/150'}
                 alt="My Profile"
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-primary-500/20 group-hover:border-primary-500 transition-all duration-300"
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border-[1.5px] border-primary-500/30"
               />
-              <div className="absolute bottom-0.5 right-0.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-500 rounded-full border-2 border-bg-surface shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-500 rounded-full border-2 border-bg-surface shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
             </div>
-            <div className="min-w-0">
-              <h2 className="text-sm font-bold text-text-main group-hover:text-primary-400 transition-colors truncate">
-                {currentUser?.displayName || 'User'}
-              </h2>
-              <p className="text-[9px] text-primary-500/50 font-semibold tracking-wide truncate">
-                {currentUserProfile?.status || 'Available'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-1 flex-shrink-0">
-            <button
-              onClick={() => setShowGroupModal(true)}
-              title="Create Group"
-              className="p-2 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors"
-            >
-              <FiUsers className="w-[18px] h-[18px]" />
-            </button>
-            <button
-              onClick={() => navigate('/settings')}
-              title="Settings"
-              className="p-2 text-text-muted hover:text-text-main hover:bg-white/10 rounded-full transition-colors"
-            >
-              <FiSettings className="w-[18px] h-[18px]" />
-            </button>
           </div>
         </div>
 
@@ -130,7 +146,7 @@ const Sidebar = () => {
         
         {/* Lists based on active tab */}
         <div 
-          className="flex-1 overflow-y-scroll scrollbar-custom pb-20 md:pb-0 relative" 
+          className="flex-1 min-h-0 overflow-y-auto scrollbar-custom pb-28 md:pb-0 relative" 
           style={{ overscrollBehaviorY: 'contain', scrollbarGutter: 'stable' }}
         >
           <AnimatePresence mode="popLayout" initial={false}>

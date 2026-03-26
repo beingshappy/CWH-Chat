@@ -54,17 +54,23 @@ const StatusViewer = ({ userStatus, onClose, isPane = false }) => {
   const getRelativeViewTime = (timestamp) => {
     if (!timestamp) return 'Recently';
     
-    // Handle Firestore Timestamp objects or raw milliseconds
     let millis = typeof timestamp === 'number' ? timestamp : (timestamp.toMillis ? timestamp.toMillis() : (timestamp.seconds ? timestamp.seconds * 1000 : null));
-    
     if (!millis) return 'Recently';
     
-    const diffMins = Math.floor((Date.now() - millis) / 60000);
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHrs = Math.floor(diffMins / 60);
-    if (diffHrs < 24) return `${diffHrs}h ago`;
-    return `${Math.floor(diffHrs / 24)}d ago`;
+    const date = new Date(millis);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    
+    const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    
+    if (date.toDateString() === today.toDateString()) {
+      return `Today at ${timeString}`;
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return `Yesterday at ${timeString}`;
+    } else {
+      return `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} at ${timeString}`;
+    }
   };
 
   const handleDelete = (e) => {

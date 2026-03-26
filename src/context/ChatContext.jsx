@@ -99,7 +99,7 @@ export const ChatProvider = ({ children }) => {
       
       const allChats = [];
       snapshot.forEach((doc) => {
-        allChats.push({ id: doc.id, ...doc.data() });
+        allChats.push({ id: doc.id, ...doc.data({ serverTimestamps: 'estimate' }) });
       });
 
       // Sort by updatedAt descending first to keep the newest one
@@ -542,6 +542,31 @@ export const ChatProvider = ({ children }) => {
     try {
       const docRef = await addDoc(collection(db, 'calls'), callData);
       setActiveCall({ id: docRef.id, ...callData });
+
+      // Automatically log the call in the direct message chat
+      let targetChatId = activeChat?.id;
+      if (!targetChatId || activeChat.isGroup || !activeChat.members?.includes(receiverId)) {
+        const existingChat = chats.find(c => !c.isGroup && c.members.includes(receiverId));
+        if (existingChat) targetChatId = existingChat.id;
+      }
+
+      if (targetChatId) {
+        await addDoc(collection(db, 'chats', targetChatId, 'messages'), {
+          senderId: currentUser.uid,
+          senderName: currentUser.displayName || 'User',
+          senderAvatar: currentUser.photoURL || '',
+          text: `${type === 'video' ? 'Video' : 'Voice'} call started`,
+          mediaType: 'call_log',
+          read: false,
+          timestamp: serverTimestamp(),
+        });
+        
+        await updateDoc(doc(db, 'chats', targetChatId), {
+           lastMessage: `${type === 'video' ? 'Video' : 'Voice'} call`,
+           updatedAt: serverTimestamp(),
+           [`unreadCount.${receiverId}`]: increment(1)
+        });
+      }
     } catch (e) {
       console.error('[ChatContext] Failed to start call:', e);
     }
@@ -577,6 +602,53 @@ export const ChatProvider = ({ children }) => {
         if (prev.find(c => c.id === completedCall.id)) return prev;
         return [completedCall, ...prev].slice(0, 50);
       });
+
+      // Automatically log the call end in the direct message chat
+      try {
+        let durationStr = 'Missed';
+        if (activeCall.status === 'active' && activeCall.createdAt) {
+          const startMs = activeCall.createdAt.toDate?.()?.getTime() || Date.now();
+          const diffSec = Math.floor((endedAt.getTime() - startMs) / 1000);
+          const m = Math.floor(diffSec / 60);
+          const s = diffSec % 60;
+          durationStr = `${m}:${s.toString().padStart(2, '0')} min`;
+        }
+
+        const otherUserId = activeCall.callerId === currentUser.uid ? activeCall.receiverId : activeCall.callerId;
+        
+        let targetChatId = activeChat?.id;
+        if (!targetChatId || activeChat?.isGroup || !activeChat?.members?.includes(otherUserId)) {
+          const existingChat = chats.find(c => !c.isGroup && c.members.includes(otherUserId));
+          if (existingChat) targetChatId = existingChat.id;
+        }
+
+        if (targetChatId) {
+          let callMsgText = `${activeCall.type === 'video' ? 'Video' : 'Voice'} call ended`;
+          if (durationStr === 'Missed') {
+             callMsgText = `Missed ${activeCall.type === 'video' ? 'video' : 'voice'} call`;
+          } else {
+             callMsgText += ` (${durationStr})`;
+          }
+
+          await addDoc(collection(db, 'chats', targetChatId, 'messages'), {
+            senderId: currentUser.uid,
+            senderName: currentUser.displayName || 'User',
+            senderAvatar: currentUser.photoURL || '',
+            text: callMsgText,
+            mediaType: 'call_log',
+            read: false,
+            timestamp: serverTimestamp(),
+          });
+          
+          await updateDoc(doc(db, 'chats', targetChatId), {
+             lastMessage: callMsgText,
+             updatedAt: serverTimestamp(),
+             [`unreadCount.${otherUserId}`]: increment(1)
+          });
+        }
+      } catch (logErr) {
+        console.warn('Failed to log call end to chat:', logErr);
+      }
 
       setActiveCall(null);
     } catch (e) { console.error('[ChatContext] End failed:', e); }

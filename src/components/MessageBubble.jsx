@@ -1,6 +1,6 @@
 import React, { useState, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiDownload, FiFile, FiCornerUpLeft, FiSmile, FiEdit2, FiTrash2, FiHeart, FiThumbsUp, FiStar, FiZap, FiCheckCircle, FiImage, FiShare2, FiMic, FiPlay, FiPause, FiMapPin } from 'react-icons/fi';
+import { FiDownload, FiFile, FiCornerUpLeft, FiSmile, FiEdit2, FiTrash2, FiHeart, FiThumbsUp, FiStar, FiZap, FiCheckCircle, FiImage, FiShare2, FiMic, FiPlay, FiPause, FiMapPin, FiPhone } from 'react-icons/fi';
 import { db } from '../firebase/firebaseConfig';
 import { doc, deleteDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
@@ -520,6 +520,11 @@ const MessageBubble = ({ message, isMe, grouped = false, chatId, onForward }) =>
             <div className="flex items-center space-x-2 italic opacity-60 py-1">
               <FiTrash2 className="w-3.5 h-3.5" />
               <p className="text-sm">This message was deleted</p>
+            </div>
+          ) : message.mediaType === 'call_log' ? (
+            <div className={`flex items-center space-x-2 py-1 ${isMe ? 'text-primary-50' : 'text-primary-500'}`}>
+              <FiPhone className="w-4 h-4 flex-shrink-0" />
+              <p className="text-sm font-semibold">{message.text}</p>
             </div>
           ) : (
             message.text && (

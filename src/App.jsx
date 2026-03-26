@@ -6,6 +6,7 @@ import PageTransition from './components/PageTransition';
 import BackgroundEffects from './components/BackgroundEffects';
 import CallOverlay from './components/CallOverlay';
 import ModernPopup from './components/ModernPopup';
+import NotificationProvider from './components/NotificationProvider';
 
 import { AnimatePresence } from 'framer-motion';
 
@@ -54,11 +55,13 @@ function App() {
       <Router>
         <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative font-sans">
           <BackgroundEffects />
-          <CallOverlay />
-          <ModernPopup />
-          <Suspense fallback={<LoadingSpinner />}>
-            <AnimatedRoutes />
-          </Suspense>
+          <NotificationProvider>
+            <CallOverlay />
+            <ModernPopup />
+            <Suspense fallback={<LoadingSpinner />}>
+              <AnimatedRoutes />
+            </Suspense>
+          </NotificationProvider>
         </div>
       </Router>
     </ThemeProvider>
