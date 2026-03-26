@@ -174,7 +174,13 @@ export const ChatProvider = ({ children }) => {
 
     const unsubscribe = onSnapshot(doc(db, 'calls', activeCall.id), (doc) => {
       if (doc.exists()) {
-        setActiveCall({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        if (['ended', 'rejected', 'missed'].includes(data.status)) {
+          // Clear after a delay to allow the overlay's exit animation to fire
+          setTimeout(() => setActiveCall(null), 800);
+        } else {
+          setActiveCall({ id: doc.id, ...data });
+        }
       } else {
         setActiveCall(null);
       }
@@ -584,11 +590,17 @@ export const ChatProvider = ({ children }) => {
   const endCall = async () => {
     if (!activeCall) return;
     try {
+      const callId = activeCall.id;
       const endedAt = new Date();
-      await updateDoc(doc(db, 'calls', activeCall.id), {
+      
+      // Update DB
+      await updateDoc(doc(db, 'calls', callId), {
         status: 'ended',
         endedAt: serverTimestamp()
       });
+      
+      // Clear local state after a short delay to let animations finish
+      setTimeout(() => setActiveCall(null), 500);
       
       // Proactively update call history locally for high-speed feel
       const completedCall = { 

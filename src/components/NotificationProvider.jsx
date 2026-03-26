@@ -116,7 +116,7 @@ const NotificationPrompt = ({ onAllow, onSkip }) => (
 export const NotificationProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
   const [showPrompt, setShowPrompt] = useState(false);
-  const { chats, activeChat, activeCall } = useChat();
+  const { chats, activeChat, activeCall, users } = useChat();
   const { currentUser } = useAuth();
   const prevUnreadRef = useRef({});
   const prevCallIdRef = useRef(null);
@@ -132,6 +132,17 @@ export const NotificationProvider = ({ children }) => {
     setTimeout(() => dismiss(id), 5000); // auto-dismiss after 5s
     return id;
   }, [dismiss]);
+
+  // ── Auto-Clear Notifications when Chat Opens ──────────────────────────────
+  useEffect(() => {
+    if (activeChat && 'Notification' in window && Notification.permission === 'granted') {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.getNotifications({ tag: `chat_${activeChat.id}` }).then(notifications => {
+          notifications.forEach(n => n.close());
+        });
+      });
+    }
+  }, [activeChat?.id]);
 
   // ── Show first-time prompt after 2s if permission not yet set ─────────────
   useEffect(() => {
@@ -167,12 +178,16 @@ export const NotificationProvider = ({ children }) => {
     // OS Notification (with avatar support via icon field)
     if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
       navigator.serviceWorker.ready.then(registration => {
-        registration.showNotification(`Incoming ${activeCall.type} call`, {
-          body: `${activeCall.callerName} is calling you...`,
+        registration.showNotification(`Incoming Call`, {
+          body: `${activeCall.callerName} is calling you via CWH Chat`,
           icon: activeCall.callerPhoto || '/icon-192x192.png',
           badge: '/icon-192x192.png',
           tag: 'call_' + activeCall.id,
           requireInteraction: true,
+          vibrate: [200, 100, 200, 100, 200],
+          actions: [
+            { action: 'open', title: 'Answer Call' }
+          ],
           data: { url: window.location.origin }
         });
       });
@@ -205,15 +220,31 @@ export const NotificationProvider = ({ children }) => {
           return;
         }
 
+        // Logic to find real Name and Avatar if it's a 1-on-1 chat
+        let displayName = chat.name || 'Someone';
+        let displayPhoto = chat.photo || '/icon-192x192.png';
+
+        if (!chat.isGroup && (!chat.name || chat.name === 'Someone')) {
+          const otherId = chat.members.find(m => m !== currentUser.uid);
+          const otherUser = users.find(u => u.id === otherId);
+          if (otherUser) {
+            displayName = otherUser.name || otherUser.displayName || 'Someone';
+            displayPhoto = otherUser.avatar || otherUser.photoURL || displayPhoto;
+          }
+        }
+
         // OS Notification
         if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
           navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification(`New message from ${chat.name || 'Someone'}`, {
-              body: chat.lastMessage || 'You have a new message',
-              icon: chat.photo || '/icon-192x192.png',
+            registration.showNotification(displayName, {
+              body: chat.lastMessage || 'New message on CWH Chat',
+              icon: displayPhoto,
               badge: '/icon-192x192.png',
               tag: `chat_${chat.id}`,
               vibrate: [100, 50, 100],
+              actions: [
+                { action: 'open', title: 'View Message' }
+              ],
               data: { url: window.location.origin }
             });
           });
@@ -222,16 +253,16 @@ export const NotificationProvider = ({ children }) => {
         // In-app toast (always show when different chat is active)
         addToast({
           type: 'message',
-          title: chat.name || 'New Message',
-          body: chat.lastMessage || 'You have a new message',
-          avatar: chat.photo,
+          title: displayName,
+          body: chat.lastMessage || 'Sent you a message',
+          avatar: displayPhoto,
           onClick: () => window.focus(),
         });
       }
 
       prevUnreadRef.current[chat.id] = currentUnread;
     });
-  }, [chats, currentUser, activeChat]);
+  }, [chats, currentUser, activeChat, users]);
 
   return (
     <ToastContext.Provider value={{ addToast, dismiss }}>
